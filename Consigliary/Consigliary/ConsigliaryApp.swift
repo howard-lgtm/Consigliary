@@ -19,4 +19,5 @@ struct ConsigliaryApp: App {
 class AppState: ObservableObject {
     @Published var hasCompletedOnboarding = false
     @Published var isAuthenticated = false
+    @Published var isDemoMode = false
 }

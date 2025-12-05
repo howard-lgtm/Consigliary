@@ -9,8 +9,8 @@ class AppData: ObservableObject {
     @Published var activities: [Activity] = Activity.mockData
     @Published var deals: [Deal] = Deal.mockData
     @Published var revenueEvents: [RevenueEvent] = RevenueEvent.mockData
-    @Published var contractAnalyses: [ContractAnalysis] = []
-    @Published var splitSheets: [SplitSheet] = []
+    @Published var contractAnalyses: [ContractAnalysis] = ContractAnalysis.demoScenarios
+    @Published var splitSheets: [SplitSheet] = SplitSheet.demoData
     
     // MARK: - Computed Properties
     var threatsNeutralized: Int {
@@ -285,6 +285,26 @@ struct SplitSheet: Identifiable {
     let trackTitle: String
     let contributors: [Contributor]
     let createdDate: Date
+    
+    static let demoData: [SplitSheet] = [
+        SplitSheet(
+            trackTitle: "Starlight Symphony",
+            contributors: [
+                Contributor(name: "Jordan Davis", role: "Producer/Writer", percentage: 50),
+                Contributor(name: "Sarah Chen", role: "Co-Writer", percentage: 30),
+                Contributor(name: "Marcus Johnson", role: "Beat Maker", percentage: 20)
+            ],
+            createdDate: Date().addingTimeInterval(-86400 * 7) // 7 days ago
+        ),
+        SplitSheet(
+            trackTitle: "Midnight Dreams",
+            contributors: [
+                Contributor(name: "Jordan Davis", role: "Producer", percentage: 60),
+                Contributor(name: "Alex Rivera", role: "Vocalist/Writer", percentage: 40)
+            ],
+            createdDate: Date().addingTimeInterval(-86400 * 14) // 14 days ago
+        )
+    ]
 }
 
 // MARK: - Contract Analysis Model

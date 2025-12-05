@@ -12,18 +12,18 @@ struct AccountView: View {
                             .fill(Color(hex: "32D74B"))
                             .frame(width: 60, height: 60)
                             .overlay(
-                                Text("HD")
+                                Text("JD")
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.black)
                             )
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Howard Duffy")
+                            Text("Jordan Davis")
                                 .font(.title3)
                                 .fontWeight(.semibold)
                             
-                            Text("howard@htdstudio.net")
+                            Text("jordan@example.com")
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                         }

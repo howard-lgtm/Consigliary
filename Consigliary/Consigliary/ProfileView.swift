@@ -4,11 +4,13 @@ struct ProfileView: View {
     @EnvironmentObject var appData: AppData
     @Environment(\.dismiss) var dismiss
     
-    @State private var name = "Howard Duffy"
-    @State private var email = "howard@htdstudio.net"
+    @State private var name = "Jordan Davis"
+    @State private var email = "jordan@example.com"
     @State private var artistType = "Independent Artist"
     @State private var genre = "Electronic"
     @State private var showingSaveAlert = false
+    @State private var showingImagePicker = false
+    @State private var profileImage: UIImage?
     
     let artistTypes = ["Independent Artist", "Signed Artist", "Producer", "Label", "Manager"]
     let genres = ["Electronic", "Hip Hop", "Pop", "Rock", "R&B", "Country", "Jazz", "Classical", "Other"]
@@ -20,17 +22,25 @@ struct ProfileView: View {
                     // Profile Photo
                     VStack(spacing: 16) {
                         ZStack {
-                            Circle()
-                                .fill(Color(hex: "32D74B"))
-                                .frame(width: 100, height: 100)
-                            
-                            Text("HD")
-                                .font(.system(size: 36, weight: .bold))
-                                .foregroundColor(.black)
+                            if let profileImage = profileImage {
+                                Image(uiImage: profileImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 100, height: 100)
+                                    .clipShape(Circle())
+                            } else {
+                                Circle()
+                                    .fill(Color(hex: "32D74B"))
+                                    .frame(width: 100, height: 100)
+                                
+                                Text("JD")
+                                    .font(.system(size: 36, weight: .bold))
+                                    .foregroundColor(.black)
+                            }
                         }
                         
                         Button(action: {
-                            // Photo picker would go here
+                            showingImagePicker = true
                         }) {
                             Text("Change Photo")
                                 .font(.subheadline)
@@ -154,6 +164,47 @@ struct ProfileView: View {
             } message: {
                 Text("Your profile has been successfully updated.")
             }
+            .sheet(isPresented: $showingImagePicker) {
+                ImagePicker(image: $profileImage)
+            }
+        }
+    }
+}
+
+// MARK: - Image Picker
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var image: UIImage?
+    @Environment(\.dismiss) var dismiss
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        picker.sourceType = .photoLibrary
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: ImagePicker
+        
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+        
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.image = image
+            }
+            parent.dismiss()
+        }
+        
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
         }
     }
 }
