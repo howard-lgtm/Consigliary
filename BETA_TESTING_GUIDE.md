@@ -236,7 +236,7 @@ We consider the beta successful if:
 - Be as detailed as possible
 
 ### **Via Email**
-- Send to: beta@consigliary.app
+- Send to: howard@htdstudio.net
 - Subject: "Beta Feedback - [Your Name]"
 - Include device info and iOS version
 
@@ -260,7 +260,7 @@ We consider the beta successful if:
 
 Your participation helps us build a better product for the entire music community. We're grateful for your time and insights.
 
-**Questions?** Contact us at support@consigliary.app
+**Questions?** Contact us at howard@htdstudio.net
 
 ---
 

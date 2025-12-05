@@ -263,7 +263,7 @@ Upon termination:
 ## 13. Dispute Resolution
 
 ### **13.1 Informal Resolution**
-Before filing a claim, you agree to contact us at legal@consigliary.app to attempt informal resolution.
+Before filing a claim, you agree to contact us at howard@htdstudio.net to attempt informal resolution.
 
 ### **13.2 Arbitration**
 Any disputes arising from this Agreement shall be resolved through binding arbitration, except:
@@ -307,7 +307,7 @@ We are not liable for delays or failures due to circumstances beyond our reasona
 
 For questions about this Agreement, contact us:
 
-**Email**: legal@consigliary.app  
+**Email**: howard@htdstudio.net  
 **Mail**: Howard Duffy  
          HTDSTUDIO AB  
          Eskilsgatan 77  

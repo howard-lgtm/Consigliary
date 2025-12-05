@@ -163,7 +163,7 @@ Download Consigliary today and take control of your music business.
 ```
 
 - **Keywords:** music rights, contract analysis, split sheet, music business, royalties, sync license, music producer, songwriter, music management, AI music
-- **Support URL:** https://consigliary.app (or support@consigliary.app)
+- **Support URL:** https://consigliary.app (or howard@htdstudio.net)
 - **Marketing URL:** https://consigliary.app (optional)
 
 ### **Step 3: Pricing & Availability**
@@ -197,7 +197,7 @@ Upload from: `~/Desktop/01-dashboard.png`, etc.
 **Contact Information:**
 - First Name: Howard
 - Last Name: Duffy
-- Email: support@consigliary.app
+- Email: howard@htdstudio.net
 - Phone: [Your phone number]
 
 **Demo Account (for App Review):**
@@ -357,8 +357,8 @@ Howard
 - Documentation: https://developer.apple.com/documentation/
 
 **Need Help:**
-- Email: support@consigliary.app
-- Beta Feedback: beta@consigliary.app
+- Email: howard@htdstudio.net
+- Beta Feedback: howard@htdstudio.net
 
 ---
 

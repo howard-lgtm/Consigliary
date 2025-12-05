@@ -103,7 +103,7 @@ struct PrivacyPolicyView: View {
                         .foregroundColor(.gray)
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Email: privacy@consigliary.app")
+                        Text("Email: howard@htdstudio.net")
                         Text("HTDSTUDIO AB")
                         Text("Eskilsgatan 77")
                         Text("Eskilstuna, 633 56")

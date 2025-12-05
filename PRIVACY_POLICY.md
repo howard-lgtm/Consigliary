@@ -183,7 +183,7 @@ EU/EEA users have rights under the General Data Protection Regulation:
 - Right to withdraw consent
 - Right to lodge a complaint with supervisory authority
 
-**To exercise your rights**, contact us at privacy@consigliary.app
+**To exercise your rights**, contact us at howard@htdstudio.net
 
 ---
 
@@ -204,7 +204,7 @@ When you delete your account:
 
 ## Children's Privacy
 
-Consigliary is not intended for users under 18 years of age. We do not knowingly collect information from children. If you believe we have collected information from a child, please contact us immediately at privacy@consigliary.app.
+Consigliary is not intended for users under 18 years of age. We do not knowingly collect information from children. If you believe we have collected information from a child, please contact us immediately at howard@htdstudio.net.
 
 ---
 
@@ -256,7 +256,7 @@ Your continued use of the App after changes constitutes acceptance of the update
 
 If you have questions or concerns about this Privacy Policy, please contact us:
 
-**Email**: privacy@consigliary.app  
+**Email**: howard@htdstudio.net  
 **Mail**: Howard Duffy  
          HTDSTUDIO AB  
          Eskilsgatan 77  
@@ -265,7 +265,7 @@ If you have questions or concerns about this Privacy Policy, please contact us:
 **Phone**: [Contact Number]
 
 For data protection inquiries (EU users):  
-**Email**: dpo@consigliary.app
+**Email**: howard@htdstudio.net
 
 ---
 

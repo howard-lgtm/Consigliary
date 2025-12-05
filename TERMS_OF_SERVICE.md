@@ -377,7 +377,7 @@ Upon termination:
 These Terms are governed by the laws of [Your State/Country], without regard to conflict of law principles.
 
 ### **17.2 Informal Resolution**
-Before filing a claim, you agree to contact us at legal@consigliary.app to attempt informal resolution for at least 30 days.
+Before filing a claim, you agree to contact us at howard@htdstudio.net to attempt informal resolution for at least 30 days.
 
 ### **17.3 Arbitration**
 Any disputes shall be resolved through binding arbitration under the rules of the American Arbitration Association (AAA), except:
@@ -416,7 +416,7 @@ Notices to you may be sent via:
 - In-app notifications
 - Posting on our website
 
-Notices to us should be sent to: legal@consigliary.app
+Notices to us should be sent to: howard@htdstudio.net
 
 ---
 
@@ -424,8 +424,8 @@ Notices to us should be sent to: legal@consigliary.app
 
 For questions about these Terms, contact us:
 
-**Email**: support@consigliary.app  
-**Legal**: legal@consigliary.app  
+**Email**: howard@htdstudio.net  
+**Legal**: howard@htdstudio.net  
 **Mail**: Howard Duffy  
          HTDSTUDIO AB  
          Eskilsgatan 77  

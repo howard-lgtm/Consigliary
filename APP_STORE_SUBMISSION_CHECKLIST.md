@@ -176,7 +176,7 @@ Consigliary provides informational tools and AI-powered analysis but does NOT pr
 📞 SUPPORT
 
 Questions? We're here to help!
-• Email: support@consigliary.app
+• Email: howard@htdstudio.net
 • In-app help center
 • Comprehensive documentation
 
@@ -372,7 +372,7 @@ TESTING SUGGESTIONS:
 - Review revenue dashboard
 - Check settings and account management
 
-Contact: support@consigliary.app for any questions during review.
+Contact: howard@htdstudio.net for any questions during review.
 ```
 
 ---
@@ -456,7 +456,7 @@ Your submission is ready when:
 - App Store Connect Help
 
 **Consigliary Support**
-- Email: support@consigliary.app
+- Email: howard@htdstudio.net
 - Developer: howard@htdstudio.net
 
 ---
