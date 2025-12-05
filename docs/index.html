@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consigliary - Legal Documents</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #e5e5e7;
+            background: #000000;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #32D74B 0%, #64D2FF 100%);
+            border-radius: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        
+        .tagline {
+            font-size: 1.2em;
+            color: #86868b;
+            margin-bottom: 50px;
+        }
+        
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+        
+        .link-button {
+            display: block;
+            padding: 20px 30px;
+            background: #1c1c1e;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #ffffff;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            border: 1px solid #2c2c2e;
+        }
+        
+        .link-button:hover {
+            background: #2c2c2e;
+            transform: translateY(-2px);
+            border-color: #32D74B;
+        }
+        
+        .link-button .icon {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        
+        .link-button .arrow {
+            float: right;
+            color: #86868b;
+        }
+        
+        .footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #2c2c2e;
+            color: #86868b;
+            font-size: 0.9em;
+        }
+        
+        .footer p {
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            .logo {
+                width: 100px;
+                height: 100px;
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">C</div>
+        
+        <h1>Consigliary</h1>
+        <p class="tagline">Your Music Business, Protected</p>
+        
+        <div class="links">
+            <a href="privacy-policy.html" class="link-button">
+                <span class="icon">🔒</span>
+                Privacy Policy
+                <span class="arrow">→</span>
+            </a>
+            
+            <a href="terms-of-service.html" class="link-button">
+                <span class="icon">📄</span>
+                Terms of Service
+                <span class="arrow">→</span>
+            </a>
+            
+            <a href="eula.html" class="link-button">
+                <span class="icon">📋</span>
+                End User License Agreement
+                <span class="arrow">→</span>
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p><strong>HTDSTUDIO AB</strong></p>
+            <p>Eskilsgatan 77, Eskilstuna, 633 56, Sweden</p>
+            <p><a href="mailto:support@consigliary.app" style="color: #64D2FF; text-decoration: none;">support@consigliary.app</a></p>
+            <p style="margin-top: 20px;">&copy; 2024 HTDSTUDIO AB. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
