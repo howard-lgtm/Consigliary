@@ -1,7 +1,26 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const { query } = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const s3Service = require('../services/s3');
+const acrcloudService = require('../services/acrcloud');
+
+// Configure multer for file uploads (memory storage)
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 50 * 1024 * 1024 // 50MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/flac', 'audio/aac'];
+        if (allowedTypes.includes(file.mimetype) || file.originalname.match(/\.(mp3|wav|m4a|flac|aac)$/i)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only audio files are allowed.'));
+        }
+    }
+});
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -255,6 +274,91 @@ router.delete('/:id', async (req, res) => {
             error: {
                 code: 'INTERNAL_ERROR',
                 message: 'Failed to delete track'
+            }
+        });
+    }
+});
+
+// POST /api/v1/tracks/:id/upload-audio - Upload audio file for track
+router.post('/:id/upload-audio', upload.single('audio'), async (req, res) => {
+    try {
+        // Verify track ownership
+        const trackResult = await query(
+            'SELECT id, title, artist_name FROM tracks WHERE id = $1 AND user_id = $2',
+            [req.params.id, req.user.id]
+        );
+
+        if (trackResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: 'Track not found'
+                }
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'VALIDATION_ERROR',
+                    message: 'Audio file is required'
+                }
+            });
+        }
+
+        const track = trackResult.rows[0];
+        const audioBuffer = req.file.buffer;
+
+        // Step 1: Upload to S3
+        console.log(`Uploading audio to S3 for track ${track.id}...`);
+        const s3Result = await s3Service.uploadAudioFile(
+            audioBuffer,
+            req.user.id,
+            track.id,
+            req.file.originalname
+        );
+
+        // Step 2: Generate ACRCloud fingerprint
+        console.log(`Generating ACRCloud fingerprint for track ${track.id}...`);
+        let fingerprintResult;
+        try {
+            fingerprintResult = await acrcloudService.generateFingerprint(audioBuffer);
+        } catch (acrError) {
+            console.error('ACRCloud fingerprint error:', acrError);
+            // Continue even if fingerprinting fails - we still have the audio file
+            fingerprintResult = null;
+        }
+
+        // Step 3: Update track with S3 URL and fingerprint ID
+        const acrcloudFingerprintId = fingerprintResult?.metadata?.music?.[0]?.acrid || null;
+        
+        await query(
+            `UPDATE tracks 
+             SET audio_file_url = $1, 
+                 acrcloud_fingerprint_id = $2,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $3`,
+            [s3Result.url, acrcloudFingerprintId, track.id]
+        );
+
+        res.json({
+            success: true,
+            data: {
+                audioUrl: s3Result.url,
+                fingerprintId: acrcloudFingerprintId,
+                fingerprintGenerated: !!acrcloudFingerprintId
+            },
+            message: 'Audio file uploaded and processed successfully'
+        });
+    } catch (error) {
+        console.error('Upload audio error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'INTERNAL_ERROR',
+                message: error.message || 'Failed to upload audio file'
             }
         });
     }
