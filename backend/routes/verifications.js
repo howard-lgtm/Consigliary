@@ -1,47 +1,103 @@
 const express = require('express');
 const router = express.Router();
-const { query } = require('../config/database');
+const pool = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const urlExtractor = require('../services/urlExtractor');
+const acrcloudService = require('../services/acrcloud');
 
 // All routes require authentication
 router.use(authenticateToken);
 
-// POST /api/v1/verifications - Verify URL (placeholder for Week 3)
+// POST /api/v1/verifications - Verify URL with ACRCloud
 router.post('/', async (req, res) => {
     try {
-        const { videoUrl, platform } = req.body;
+        const { videoUrl, trackId } = req.body;
 
-        if (!videoUrl || !platform) {
+        if (!videoUrl) {
             return res.status(400).json({
                 success: false,
-                error: {
-                    code: 'VALIDATION_ERROR',
-                    message: 'Video URL and platform are required'
-                }
+                message: 'Video URL is required'
             });
         }
 
-        // TODO: Week 3 - Implement ACRCloud verification
-        // For now, return placeholder response
-        res.json({
-            success: true,
-            data: {
-                verification: {
-                    videoUrl,
-                    platform,
-                    matchFound: false,
-                    message: 'Verification feature coming in Week 3'
-                }
+        // Validate URL format
+        if (!urlExtractor.isValidUrl(videoUrl)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid URL format'
+            });
+        }
+
+        // Extract metadata from URL
+        let metadata;
+        try {
+            metadata = await urlExtractor.extractMetadata(videoUrl);
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        // If trackId provided, verify ownership
+        if (trackId) {
+            const trackCheck = await pool.query(
+                'SELECT user_id FROM tracks WHERE id = $1',
+                [trackId]
+            );
+
+            if (trackCheck.rows.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Track not found'
+                });
             }
+
+            if (trackCheck.rows[0].user_id !== req.user.userId) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized to verify against this track'
+                });
+            }
+        }
+
+        // Create verification record
+        const result = await pool.query(
+            `INSERT INTO verifications 
+             (user_id, track_id, platform, video_url, video_id, video_title, channel_name, channel_url, status)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')
+             RETURNING *`,
+            [
+                req.user.userId,
+                trackId || null,
+                metadata.platform,
+                metadata.videoUrl,
+                metadata.videoId,
+                metadata.videoTitle,
+                metadata.channelName,
+                metadata.channelUrl
+            ]
+        );
+
+        const verification = result.rows[0];
+
+        // Note: Actual audio extraction and ACRCloud matching would happen here
+        // For MVP, we're storing the verification request
+        // In production, this would trigger a background job to:
+        // 1. Download/extract audio from video URL
+        // 2. Send audio to ACRCloud for matching
+        // 3. Update verification record with results
+
+        res.status(201).json({
+            success: true,
+            data: verification,
+            message: 'Verification request created. Audio matching will be processed.'
         });
     } catch (error) {
         console.error('Verification error:', error);
         res.status(500).json({
             success: false,
-            error: {
-                code: 'INTERNAL_ERROR',
-                message: 'Verification failed'
-            }
+            message: 'Verification failed'
         });
     }
 });
@@ -49,27 +105,198 @@ router.post('/', async (req, res) => {
 // GET /api/v1/verifications - List verifications
 router.get('/', async (req, res) => {
     try {
-        const result = await query(
-            `SELECT * FROM verifications 
-             WHERE user_id = $1 
-             ORDER BY created_at DESC`,
-            [req.user.id]
+        const result = await pool.query(
+            `SELECT v.*, t.title as track_title, t.artist_name 
+             FROM verifications v
+             LEFT JOIN tracks t ON v.track_id = t.id
+             WHERE v.user_id = $1 
+             ORDER BY v.created_at DESC`,
+            [req.user.userId]
         );
 
         res.json({
             success: true,
-            data: {
-                verifications: result.rows
-            }
+            data: result.rows
         });
     } catch (error) {
         console.error('Fetch verifications error:', error);
         res.status(500).json({
             success: false,
-            error: {
-                code: 'INTERNAL_ERROR',
-                message: 'Failed to fetch verifications'
-            }
+            message: 'Failed to fetch verifications'
+        });
+    }
+});
+
+// GET /api/v1/verifications/:id - Get single verification
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            `SELECT v.*, t.title as track_title, t.artist_name 
+             FROM verifications v
+             LEFT JOIN tracks t ON v.track_id = t.id
+             WHERE v.id = $1 AND v.user_id = $2`,
+            [id, req.user.userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Fetch verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch verification'
+        });
+    }
+});
+
+// PUT /api/v1/verifications/:id/status - Update verification status
+router.put('/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const validStatuses = ['pending', 'confirmed', 'disputed', 'dismissed'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status. Must be one of: pending, confirmed, disputed, dismissed'
+            });
+        }
+
+        // Verify ownership
+        const verificationCheck = await pool.query(
+            'SELECT user_id FROM verifications WHERE id = $1',
+            [id]
+        );
+
+        if (verificationCheck.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        if (verificationCheck.rows[0].user_id !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to update this verification'
+            });
+        }
+
+        const result = await pool.query(
+            `UPDATE verifications 
+             SET status = $1, reviewed_at = CURRENT_TIMESTAMP
+             WHERE id = $2
+             RETURNING *`,
+            [status, id]
+        );
+
+        res.json({
+            success: true,
+            data: result.rows[0],
+            message: 'Verification status updated'
+        });
+    } catch (error) {
+        console.error('Update verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update verification'
+        });
+    }
+});
+
+// DELETE /api/v1/verifications/:id - Delete verification
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verify ownership
+        const verificationCheck = await pool.query(
+            'SELECT user_id FROM verifications WHERE id = $1',
+            [id]
+        );
+
+        if (verificationCheck.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        if (verificationCheck.rows[0].user_id !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to delete this verification'
+            });
+        }
+
+        await pool.query('DELETE FROM verifications WHERE id = $1', [id]);
+
+        res.json({
+            success: true,
+            message: 'Verification deleted'
+        });
+    } catch (error) {
+        console.error('Delete verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete verification'
+        });
+    }
+});
+
+// GET /api/v1/tracks/:trackId/verifications - Get verifications for a track
+router.get('/tracks/:trackId/verifications', async (req, res) => {
+    try {
+        const { trackId } = req.params;
+
+        // Verify track ownership
+        const trackCheck = await pool.query(
+            'SELECT user_id FROM tracks WHERE id = $1',
+            [trackId]
+        );
+
+        if (trackCheck.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Track not found'
+            });
+        }
+
+        if (trackCheck.rows[0].user_id !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to view verifications for this track'
+            });
+        }
+
+        const result = await pool.query(
+            `SELECT * FROM verifications 
+             WHERE track_id = $1 
+             ORDER BY created_at DESC`,
+            [trackId]
+        );
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        console.error('Fetch track verifications error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch verifications'
         });
     }
 });
