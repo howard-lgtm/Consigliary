@@ -4,6 +4,8 @@ const pool = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const urlExtractor = require('../services/urlExtractor');
 const acrcloudService = require('../services/acrcloud');
+const audioExtractor = require('../services/audioExtractor');
+const s3Service = require('../services/s3');
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -81,18 +83,76 @@ router.post('/', async (req, res) => {
 
         const verification = result.rows[0];
 
-        // Note: Actual audio extraction and ACRCloud matching would happen here
-        // For MVP, we're storing the verification request
-        // In production, this would trigger a background job to:
-        // 1. Download/extract audio from video URL
-        // 2. Send audio to ACRCloud for matching
-        // 3. Update verification record with results
+        // Extract audio from video URL
+        console.log(`🎵 Starting audio extraction for verification ${verification.id}`);
+        let audioData, audioSampleUrl, matchResult;
+        
+        try {
+            // Step 1: Extract audio from video
+            audioData = await audioExtractor.extractAudio(videoUrl);
+            console.log(`✅ Audio extracted: ${audioData.buffer.length} bytes`);
 
-        res.status(201).json({
-            success: true,
-            data: verification,
-            message: 'Verification request created. Audio matching will be processed.'
-        });
+            // Step 2: Upload audio sample to S3
+            audioSampleUrl = await s3Service.uploadAudioSample(audioData.buffer, verification.id);
+            console.log(`✅ Audio sample uploaded to S3: ${audioSampleUrl}`);
+
+            // Step 3: Identify audio with ACRCloud
+            matchResult = await acrcloudService.identifyAudio(audioData.buffer);
+            console.log(`✅ ACRCloud identification complete`);
+
+            // Step 4: Update verification with results
+            const updateQuery = `
+                UPDATE verifications 
+                SET audio_sample_url = $1,
+                    match_found = $2,
+                    confidence_score = $3,
+                    matched_track_title = $4,
+                    matched_artist = $5,
+                    view_count = $6,
+                    upload_date = $7
+                WHERE id = $8
+                RETURNING *
+            `;
+
+            const updateResult = await pool.query(updateQuery, [
+                audioSampleUrl,
+                matchResult.found,
+                matchResult.confidence || null,
+                matchResult.trackTitle || null,
+                matchResult.artist || null,
+                audioData.metadata.viewCount || null,
+                audioData.metadata.uploadDate || null,
+                verification.id
+            ]);
+
+            const updatedVerification = updateResult.rows[0];
+
+            res.status(201).json({
+                success: true,
+                data: {
+                    ...updatedVerification,
+                    matchDetails: matchResult
+                },
+                message: matchResult.found 
+                    ? `Match found with ${matchResult.confidence}% confidence` 
+                    : 'No match found in your track library'
+            });
+
+        } catch (extractionError) {
+            console.error('❌ Audio extraction/matching error:', extractionError);
+            
+            // Update verification with error status
+            await pool.query(
+                'UPDATE verifications SET status = $1 WHERE id = $2',
+                ['error', verification.id]
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: `Audio extraction failed: ${extractionError.message}`,
+                data: verification
+            });
+        }
     } catch (error) {
         console.error('Verification error:', error);
         res.status(500).json({
