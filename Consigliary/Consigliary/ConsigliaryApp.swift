@@ -8,10 +8,16 @@ struct ConsigliaryApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(appState)
-                .environmentObject(appData)
-                .preferredColorScheme(.dark)
+            if appState.isAuthenticated {
+                ContentView()
+                    .environmentObject(appState)
+                    .environmentObject(appData)
+                    .preferredColorScheme(.dark)
+            } else {
+                LoginView()
+                    .environmentObject(appState)
+                    .preferredColorScheme(.dark)
+            }
         }
     }
 }

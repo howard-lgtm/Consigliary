@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct ActivityView: View {
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appData: AppData
     
     var body: some View {
-        NavigationView {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 16) {
                     if appData.activities.isEmpty {
                         VStack(spacing: 16) {
@@ -32,9 +32,10 @@ struct ActivityView: View {
                 .padding()
             }
             .background(Color.black)
+            .frame(maxWidth: horizontalSizeClass == .regular ? 1000 : .infinity)
+            .frame(maxWidth: .infinity)
             .navigationTitle("Live Activity")
             .navigationBarTitleDisplayMode(.large)
-        }
     }
 }
 

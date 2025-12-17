@@ -10,7 +10,7 @@ class AppData: ObservableObject {
     @Published var deals: [Deal] = Deal.mockData
     @Published var revenueEvents: [RevenueEvent] = RevenueEvent.mockData
     @Published var contractAnalyses: [ContractAnalysis] = ContractAnalysis.demoScenarios
-    @Published var splitSheets: [SplitSheet] = SplitSheet.demoData
+    @Published var splitSheets: [SplitSheet] = []
     
     // MARK: - Computed Properties
     var threatsNeutralized: Int {
@@ -132,28 +132,12 @@ class AppData: ObservableObject {
         }
     }
     
-    func createSplitSheet(trackTitle: String, contributors: [Contributor]) -> SplitSheet {
-        let splitSheet = SplitSheet(
-            trackTitle: trackTitle,
-            contributors: contributors,
-            createdDate: Date()
-        )
-        splitSheets.append(splitSheet)
-        
-        // Create or update track
-        if let trackIndex = tracks.firstIndex(where: { $0.title == trackTitle }) {
-            tracks[trackIndex].contributors = contributors
-        } else {
-            let newTrack = Track(
-                title: trackTitle,
-                streams: 0,
-                revenue: 0,
-                contributors: contributors
-            )
-            tracks.append(newTrack)
-        }
-        
-        return splitSheet
+    // Note: Split sheet creation now handled via API (ContributorService)
+    // This mock function is deprecated
+    func createSplitSheet(trackTitle: String, contributors: [ContributorViewModel]) -> Bool {
+        // TODO: Integrate with ContributorService API
+        // For now, just return success for UI flow
+        return true
     }
     
     func generateSplitSheetPDF(for splitSheet: SplitSheet) -> URL? {
@@ -280,32 +264,7 @@ enum RevenueSource {
 }
 
 // MARK: - Split Sheet Model
-struct SplitSheet: Identifiable {
-    let id = UUID()
-    let trackTitle: String
-    let contributors: [Contributor]
-    let createdDate: Date
-    
-    static let demoData: [SplitSheet] = [
-        SplitSheet(
-            trackTitle: "Starlight Symphony",
-            contributors: [
-                Contributor(name: "Jordan Davis", role: "Producer/Writer", percentage: 50),
-                Contributor(name: "Sarah Chen", role: "Co-Writer", percentage: 30),
-                Contributor(name: "Marcus Johnson", role: "Beat Maker", percentage: 20)
-            ],
-            createdDate: Date().addingTimeInterval(-86400 * 7) // 7 days ago
-        ),
-        SplitSheet(
-            trackTitle: "Midnight Dreams",
-            contributors: [
-                Contributor(name: "Jordan Davis", role: "Producer", percentage: 60),
-                Contributor(name: "Alex Rivera", role: "Vocalist/Writer", percentage: 40)
-            ],
-            createdDate: Date().addingTimeInterval(-86400 * 14) // 14 days ago
-        )
-    ]
-}
+// Note: Using shared SplitSheet and Contributor models from Models/
 
 // MARK: - Contract Analysis Model
 struct ContractAnalysis: Identifiable {

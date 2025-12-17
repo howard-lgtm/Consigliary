@@ -16,8 +16,7 @@ struct ProfileView: View {
     let genres = ["Electronic", "Hip Hop", "Pop", "Rock", "R&B", "Country", "Jazz", "Classical", "Other"]
     
     var body: some View {
-        NavigationView {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 24) {
                     // Profile Photo
                     VStack(spacing: 16) {
@@ -167,7 +166,6 @@ struct ProfileView: View {
             .sheet(isPresented: $showingImagePicker) {
                 ImagePicker(image: $profileImage)
             }
-        }
     }
 }
 

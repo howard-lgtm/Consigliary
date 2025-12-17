@@ -6,7 +6,7 @@ class SplitSheetPDFGenerator {
     static func generatePDF(for splitSheet: SplitSheet) -> URL? {
         let pdfMetaData = [
             kCGPDFContextCreator: "Consigliary",
-            kCGPDFContextTitle: "Split Sheet - \(splitSheet.trackTitle)",
+            kCGPDFContextTitle: "Split Sheet - \(splitSheet.track.title)",
             kCGPDFContextAuthor: "HTD Studio"
         ]
         
@@ -71,7 +71,7 @@ class SplitSheetPDFGenerator {
             ]
             trackLabel.draw(at: CGPoint(x: leftMargin, y: yPosition), withAttributes: trackLabelAttributes)
             
-            let trackValue = splitSheet.trackTitle
+            let trackValue = splitSheet.track.title
             let trackValueAttributes: [NSAttributedString.Key: Any] = [
                 .font: infoFont,
                 .foregroundColor: UIColor.darkGray
@@ -85,7 +85,7 @@ class SplitSheetPDFGenerator {
             
             let dateFormatter = DateFormatter()
             dateFormatter.dateStyle = .long
-            let dateValue = dateFormatter.string(from: splitSheet.createdDate)
+            let dateValue = dateFormatter.string(from: Date())
             dateValue.draw(at: CGPoint(x: leftMargin + 100, y: yPosition), withAttributes: trackValueAttributes)
             
             yPosition += 40
@@ -141,8 +141,8 @@ class SplitSheetPDFGenerator {
                 
                 "\(index + 1)".draw(at: CGPoint(x: col1X, y: yPosition + 5), withAttributes: tableCellAttributes)
                 contributor.name.draw(at: CGPoint(x: col2X, y: yPosition + 5), withAttributes: tableCellAttributes)
-                contributor.role.draw(at: CGPoint(x: col3X, y: yPosition + 5), withAttributes: tableCellAttributes)
-                "\(contributor.percentage)%".draw(at: CGPoint(x: col4X, y: yPosition + 5), withAttributes: tableCellAttributes)
+                (contributor.role ?? "Contributor").draw(at: CGPoint(x: col3X, y: yPosition + 5), withAttributes: tableCellAttributes)
+                "\(Int(contributor.splitPercentage))%".draw(at: CGPoint(x: col4X, y: yPosition + 5), withAttributes: tableCellAttributes)
                 
                 yPosition += 25
             }
@@ -160,7 +160,7 @@ class SplitSheetPDFGenerator {
                 .foregroundColor: UIColor.systemGreen
             ]
             
-            let totalPercentage = splitSheet.contributors.reduce(0) { $0 + $1.percentage }
+            let totalPercentage = splitSheet.contributors.reduce(0.0) { $0 + $1.splitPercentage }
             "TOTAL:".draw(at: CGPoint(x: col1X, y: yPosition + 8), withAttributes: totalAttributes)
             "\(totalPercentage)%".draw(at: CGPoint(x: col4X, y: yPosition + 8), withAttributes: totalAttributes)
             
@@ -168,7 +168,7 @@ class SplitSheetPDFGenerator {
             
             // Agreement Text
             let agreementText = """
-            This split sheet confirms the ownership percentages for the musical composition titled "\(splitSheet.trackTitle)". \
+            This split sheet confirms the ownership percentages for the musical composition titled "\(splitSheet.track.title)". \
             All contributors listed above agree to these ownership percentages and understand that this document serves as \
             a binding agreement for the distribution of royalties and rights.
             """
@@ -230,7 +230,7 @@ class SplitSheetPDFGenerator {
         }
         
         // Save to temporary directory
-        let fileName = "\(splitSheet.trackTitle.replacingOccurrences(of: " ", with: "_"))_SplitSheet.pdf"
+        let fileName = "\(splitSheet.track.title.replacingOccurrences(of: " ", with: "_"))_SplitSheet.pdf"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         
         do {

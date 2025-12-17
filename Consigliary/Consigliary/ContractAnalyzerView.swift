@@ -1,9 +1,17 @@
 import SwiftUI
 
 struct ContractAnalyzerView: View {
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @EnvironmentObject var appData: AppData
     @State private var selectedScenario: ContractAnalysis?
     @State private var isAnalyzing = false
     @State private var showingScenarioPicker = false
+    @State private var showingDocumentScanner = false
+    @State private var showingCamera = false
+    @State private var showingFilePicker = false
+    @State private var showingUploadOptions = false
+    @State private var scannedImages: [UIImage] = []
     
     var body: some View {
         ScrollView {
@@ -11,16 +19,10 @@ struct ContractAnalyzerView: View {
                 if selectedScenario == nil {
                     // Upload Section
                     VStack(spacing: 24) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("AI Contract Analyzer")
-                                .font(.largeTitle)
-                                .fontWeight(.bold)
-                            
-                            Text("Upload your contract and get instant AI-powered analysis")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        Text("Upload your contract and get instant AI-powered analysis")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         
                         // Upload Area
                         VStack(spacing: 16) {
@@ -28,21 +30,61 @@ struct ContractAnalyzerView: View {
                                 .font(.system(size: 60))
                                 .foregroundColor(Color(hex: "64D2FF"))
                             
-                            Text("Drop your contract here")
+                            Text("Upload your contract")
                                 .font(.headline)
                             
                             Text("PDF, DOC, or DOCX • Max 10MB")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                             
-                            Button(action: {}) {
-                                Text("Choose File")
-                                    .font(.headline)
+                            HStack(spacing: 12) {
+                                Button(action: {
+                                    showingDocumentScanner = true
+                                }) {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "doc.text.viewfinder")
+                                            .font(.title2)
+                                        Text("Scan")
+                                            .font(.caption)
+                                    }
                                     .foregroundColor(.black)
-                                    .padding(.horizontal, 32)
+                                    .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
                                     .background(Color(hex: "64D2FF"))
                                     .cornerRadius(8)
+                                }
+                                
+                                Button(action: {
+                                    showingCamera = true
+                                }) {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "camera.fill")
+                                            .font(.title2)
+                                        Text("Photo")
+                                            .font(.caption)
+                                    }
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color(hex: "64D2FF"))
+                                    .cornerRadius(8)
+                                }
+                                
+                                Button(action: {
+                                    showingFilePicker = true
+                                }) {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "folder.fill")
+                                            .font(.title2)
+                                        Text("Files")
+                                            .font(.caption)
+                                    }
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color(hex: "64D2FF"))
+                                    .cornerRadius(8)
+                                }
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -107,38 +149,43 @@ struct ContractAnalyzerView: View {
                         }
                         
                         // Features
-                        VStack(alignment: .leading, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 12) {
                             Text("What We Analyze")
-                                .font(.title2)
-                                .fontWeight(.bold)
+                                .font(.headline)
                             
-                            FeatureItem(
-                                icon: "checkmark.shield.fill",
-                                title: "Fairness Score",
-                                description: "Overall contract fairness rating (1-10)",
-                                color: Color(hex: "32D74B")
-                            )
+                            let columns = horizontalSizeClass == .regular ?
+                                [GridItem(.flexible()), GridItem(.flexible())] :
+                                [GridItem(.flexible())]
                             
-                            FeatureItem(
-                                icon: "exclamationmark.triangle.fill",
-                                title: "Red Flags",
-                                description: "Problematic clauses and unfair terms",
-                                color: Color(hex: "FF453A")
-                            )
-                            
-                            FeatureItem(
-                                icon: "lightbulb.fill",
-                                title: "Recommendations",
-                                description: "Suggested improvements and negotiations",
-                                color: Color(hex: "FFD60A")
-                            )
-                            
-                            FeatureItem(
-                                icon: "doc.text.fill",
-                                title: "Plain English",
-                                description: "Complex legal terms explained simply",
-                                color: Color(hex: "64D2FF")
-                            )
+                            LazyVGrid(columns: columns, spacing: 12) {
+                                FeatureItem(
+                                    icon: "checkmark.shield.fill",
+                                    title: "Fairness Score",
+                                    description: "Overall contract fairness rating (1-10)",
+                                    color: Color(hex: "32D74B")
+                                )
+                                
+                                FeatureItem(
+                                    icon: "exclamationmark.triangle.fill",
+                                    title: "Red Flags",
+                                    description: "Problematic clauses and unfair terms",
+                                    color: Color(hex: "FF453A")
+                                )
+                                
+                                FeatureItem(
+                                    icon: "lightbulb.fill",
+                                    title: "Recommendations",
+                                    description: "Suggested improvements and negotiations",
+                                    color: Color(hex: "FFD60A")
+                                )
+                                
+                                FeatureItem(
+                                    icon: "doc.text.fill",
+                                    title: "Plain English",
+                                    description: "Complex legal terms explained simply",
+                                    color: Color(hex: "64D2FF")
+                                )
+                            }
                         }
                     }
                 } else if let analysis = selectedScenario {
@@ -367,9 +414,51 @@ struct ContractAnalyzerView: View {
                 }
             }
             .padding()
+            .frame(maxWidth: horizontalSizeClass == .regular ? 800 : .infinity)
+            .frame(maxWidth: .infinity)
         }
         .background(Color.black)
+        .navigationTitle("AI Contract Analyzer")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingDocumentScanner) {
+            DocumentScannerView { result in
+                switch result {
+                case .success(let images):
+                    scannedImages = images
+                    // Simulate analysis
+                    isAnalyzing = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        isAnalyzing = false
+                        selectedScenario = ContractAnalysis.demoScenarios.first
+                    }
+                case .failure(let error):
+                    print("Scanning failed: \(error.localizedDescription)")
+                }
+            }
+        }
+        .sheet(isPresented: $showingCamera) {
+            ImagePickerView(sourceType: .camera) { image in
+                if let image = image {
+                    scannedImages = [image]
+                    // Simulate analysis
+                    isAnalyzing = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        isAnalyzing = false
+                        selectedScenario = ContractAnalysis.demoScenarios.first
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingFilePicker) {
+            DocumentPickerView { _ in
+                // Simulate analysis
+                isAnalyzing = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    isAnalyzing = false
+                    selectedScenario = ContractAnalysis.demoScenarios.first
+                }
+            }
+        }
     }
     
     func scoreColor(_ score: Double) -> Color {
@@ -403,10 +492,13 @@ struct FeatureItem: View {
                     .font(.subheadline)
                     .foregroundColor(.gray)
             }
+            
+            Spacer()
         }
         .padding()
         .background(Color(hex: "1C1C1E"))
         .cornerRadius(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

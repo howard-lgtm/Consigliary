@@ -2,10 +2,12 @@ import SwiftUI
 
 struct SummaryView: View {
     @EnvironmentObject var appData: AppData
-    
+    @State private var showingContractAnalyzer = false
+    @State private var showingSplitSheet = false
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+
     var body: some View {
-        NavigationView {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 24) {
                     // 24/7 Monitoring Badge
                     HStack {
@@ -28,14 +30,14 @@ struct SummaryView: View {
                             .fontWeight(.bold)
                         
                         HStack(spacing: 16) {
-                            StatCard(
+                            MonitoringStatCard(
                                 icon: "shield.checkmark.fill",
                                 title: "Threats Neutralized",
                                 value: "\(appData.threatsNeutralized)",
                                 color: Color(hex: "32D74B")
                             )
                             
-                            StatCard(
+                            MonitoringStatCard(
                                 icon: "eye.fill",
                                 title: "Tracks Scanned",
                                 value: appData.tracksScanned,
@@ -44,18 +46,18 @@ struct SummaryView: View {
                         }
                         
                         HStack(spacing: 16) {
-                            StatCard(
+                            MonitoringStatCard(
                                 icon: "clock.fill",
                                 title: "Avg Response",
                                 value: appData.averageResponseTime,
                                 color: Color(hex: "FFD60A")
                             )
                             
-                            StatCard(
+                            MonitoringStatCard(
                                 icon: "hand.raised.fill",
                                 title: "Manual Review",
                                 value: "\(appData.manualReviewCount)",
-                                color: Color(hex: "FF453A")
+                                color: Color(hex: "FF9F0A")
                             )
                         }
                     }
@@ -93,7 +95,11 @@ struct SummaryView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        HStack(spacing: 12) {
+                        let columns = horizontalSizeClass == .regular ? 
+                            [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())] :
+                            [GridItem(.flexible()), GridItem(.flexible())]
+                        
+                        LazyVGrid(columns: columns, spacing: 12) {
                             NavigationLink(destination: SplitSheetView()) {
                                 ActionButton(
                                     icon: "doc.text.fill",
@@ -107,6 +113,22 @@ struct SummaryView: View {
                                     icon: "doc.text.magnifyingglass",
                                     title: "Analyze Contract",
                                     color: Color(hex: "64D2FF")
+                                )
+                            }
+                            
+                            NavigationLink(destination: LicenseAgreementView()) {
+                                ActionButton(
+                                    icon: "doc.badge.gearshape",
+                                    title: "License Agreement",
+                                    color: Color(hex: "FFD60A")
+                                )
+                            }
+                            
+                            NavigationLink(destination: MyTracksView()) {
+                                ActionButton(
+                                    icon: "music.note.list",
+                                    title: "My Tracks",
+                                    color: Color(hex: "BF5AF2")
                                 )
                             }
                         }
@@ -159,13 +181,14 @@ struct SummaryView: View {
                 .padding()
             }
             .background(Color.black)
+            .frame(maxWidth: horizontalSizeClass == .regular ? 1000 : .infinity)
+            .frame(maxWidth: .infinity)
             .navigationTitle("Summary")
             .navigationBarTitleDisplayMode(.large)
-        }
     }
 }
 
-struct StatCard: View {
+struct MonitoringStatCard: View {
     let icon: String
     let title: String
     let value: String

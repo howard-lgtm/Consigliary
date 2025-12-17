@@ -12,8 +12,7 @@ struct BillingView: View {
     let nextBillingDate = "January 4, 2026"
     
     var body: some View {
-        NavigationView {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 24) {
                     // Current Plan
                     VStack(alignment: .leading, spacing: 16) {
@@ -178,15 +177,6 @@ struct BillingView: View {
             .sheet(isPresented: $showingUpgrade) {
                 UpgradePlanView()
             }
-            .alert("Cancel Subscription", isPresented: $showingCancelSubscription) {
-                Button("Keep Subscription", role: .cancel) { }
-                Button("Cancel", role: .destructive) {
-                    // Cancel subscription logic
-                }
-            } message: {
-                Text("Are you sure you want to cancel your subscription? You'll lose access to Pro features at the end of your billing period.")
-            }
-        }
     }
 }
 

@@ -12,8 +12,7 @@ struct NotificationsView: View {
     @State private var showingSaveAlert = false
     
     var body: some View {
-        NavigationView {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 24) {
                     // Push Notifications Section
                     VStack(alignment: .leading, spacing: 16) {
@@ -123,7 +122,6 @@ struct NotificationsView: View {
             } message: {
                 Text("Your notification preferences have been updated.")
             }
-        }
     }
 }
 
@@ -139,7 +137,7 @@ struct ToggleRow: View {
             Image(systemName: icon)
                 .foregroundColor(color)
                 .font(.title3)
-                .frame(width: 32)
+                .frame(width: 32, height: 32)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)

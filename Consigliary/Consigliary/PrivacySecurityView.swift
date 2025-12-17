@@ -10,8 +10,7 @@ struct PrivacySecurityView: View {
     @State private var showingDeleteAccount = false
     
     var body: some View {
-        NavigationView {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 24) {
                     // Security Section
                     VStack(alignment: .leading, spacing: 16) {
@@ -253,7 +252,6 @@ struct PrivacySecurityView: View {
             } message: {
                 Text("Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.")
             }
-        }
     }
 }
 

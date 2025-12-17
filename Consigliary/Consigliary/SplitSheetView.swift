@@ -1,13 +1,22 @@
 import SwiftUI
 
+// Local view model for split sheet creation
+struct ContributorViewModel: Identifiable {
+    let id = UUID()
+    var name: String
+    var role: String
+    var percentage: Int
+}
+
 struct SplitSheetView: View {
-    @EnvironmentObject var appData: AppData
     @Environment(\.dismiss) var dismiss
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @EnvironmentObject var appData: AppData
     
     @State private var trackTitle = ""
-    @State private var contributors: [Contributor] = [
-        Contributor(name: "Howard Duffy", role: "Producer", percentage: 50),
-        Contributor(name: "", role: "Writer", percentage: 50)
+    @State private var contributors: [ContributorViewModel] = [
+        ContributorViewModel(name: "Howard Duffy", role: "Producer", percentage: 50),
+        ContributorViewModel(name: "", role: "Writer", percentage: 50)
     ]
     @State private var showingAddContributor = false
     @State private var showingSuccessAlert = false
@@ -57,7 +66,7 @@ struct SplitSheetView: View {
                         Spacer()
                         
                         Button(action: {
-                            contributors.append(Contributor(name: "", role: "Contributor", percentage: 0))
+                            contributors.append(ContributorViewModel(name: "", role: "Contributor", percentage: 0))
                         }) {
                             Image(systemName: "plus.circle.fill")
                                 .foregroundColor(Color(hex: "32D74B"))
@@ -98,15 +107,14 @@ struct SplitSheetView: View {
                 
                 // Generate Button
                 Button(action: {
-                    let splitSheet = appData.createSplitSheet(trackTitle: trackTitle, contributors: contributors)
+                    // Create split sheet via API (mock for now)
+                    let success = appData.createSplitSheet(trackTitle: trackTitle, contributors: contributors)
                     
-                    // Generate PDF
-                    if let url = appData.generateSplitSheetPDF(for: splitSheet) {
-                        pdfURL = url
-                        showingShareSheet = true
-                    } else {
+                    if success {
                         showingSuccessAlert = true
                     }
+                    // TODO: Integrate with ContributorService API to create actual split sheet
+                    // and generate PDF from API response
                 }) {
                     Text("Generate Split Sheet")
                         .font(.headline)
@@ -134,8 +142,8 @@ struct SplitSheetView: View {
             Button("Create Another") {
                 trackTitle = ""
                 contributors = [
-                    Contributor(name: "Howard Duffy", role: "Producer", percentage: 50),
-                    Contributor(name: "", role: "Writer", percentage: 50)
+                    ContributorViewModel(name: "Howard Duffy", role: "Producer", percentage: 50),
+                    ContributorViewModel(name: "", role: "Writer", percentage: 50)
                 ]
             }
         } message: {
@@ -145,7 +153,7 @@ struct SplitSheetView: View {
 }
 
 struct ContributorRow: View {
-    @Binding var contributor: Contributor
+    @Binding var contributor: ContributorViewModel
     let onDelete: () -> Void
     
     var body: some View {
@@ -195,13 +203,6 @@ struct ContributorRow: View {
         .background(Color(hex: "1C1C1E"))
         .cornerRadius(8)
     }
-}
-
-struct Contributor: Identifiable {
-    let id = UUID()
-    var name: String
-    var role: String
-    var percentage: Int
 }
 
 // MARK: - Share Sheet

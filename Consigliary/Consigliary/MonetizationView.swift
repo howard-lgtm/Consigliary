@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MonetizationView: View {
     @EnvironmentObject var appData: AppData
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     var streamingPercentage: Int {
         guard appData.totalRevenue > 0 else { return 0 }
@@ -26,8 +27,7 @@ struct MonetizationView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 24) {
                     // Total Revenue
                     VStack(spacing: 8) {
@@ -114,9 +114,10 @@ struct MonetizationView: View {
                 .padding()
             }
             .background(Color.black)
+            .frame(maxWidth: horizontalSizeClass == .regular ? 1000 : .infinity)
+            .frame(maxWidth: .infinity)
             .navigationTitle("Monetization")
             .navigationBarTitleDisplayMode(.large)
-        }
     }
 }
 

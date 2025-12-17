@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct AccountView: View {
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appState: AppState
     
     var body: some View {
-        NavigationView {
-            List {
+        List {
                 Section {
                     HStack(spacing: 16) {
                         Circle()
@@ -62,21 +62,17 @@ struct AccountView: View {
                 .listRowBackground(Color(hex: "1C1C1E"))
                 
                 Section("Support") {
-                    NavigationLink(destination: Text("Help Center")) {
+                    NavigationLink(destination: HelpCenterView()) {
                         Label("Help Center", systemImage: "questionmark.circle.fill")
                     }
                     
-                    NavigationLink(destination: Text("Contact Us")) {
+                    NavigationLink(destination: ContactUsView()) {
                         Label("Contact Us", systemImage: "envelope.fill")
                     }
                 }
                 .listRowBackground(Color(hex: "1C1C1E"))
                 
                 Section("About") {
-                    NavigationLink(destination: PrivacyPolicyView()) {
-                        Label("Privacy Policy", systemImage: "hand.raised.fill")
-                    }
-                    
                     NavigationLink(destination: TermsOfServiceView()) {
                         Label("Terms of Service", systemImage: "doc.text.fill")
                     }
@@ -104,8 +100,9 @@ struct AccountView: View {
                 .listRowBackground(Color(hex: "1C1C1E"))
             }
             .background(Color.black)
+            .frame(maxWidth: horizontalSizeClass == .regular ? 800 : .infinity)
+            .frame(maxWidth: .infinity)
             .navigationTitle("Account")
             .navigationBarTitleDisplayMode(.large)
-        }
     }
 }
