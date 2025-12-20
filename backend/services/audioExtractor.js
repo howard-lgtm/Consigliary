@@ -1,9 +1,10 @@
-const ytdl = require('ytdl-core');
+const ytdl = require('@distube/ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const { Readable } = require('stream');
 const path = require('path');
 const fs = require('fs').promises;
 const os = require('os');
+const ytdlpExtractor = require('./ytdlpExtractor');
 
 class AudioExtractor {
   /**
@@ -61,6 +62,34 @@ class AudioExtractor {
    */
   async extractFromYouTube(url) {
     try {
+      // Try ytdl-core first
+      return await this.extractWithYtdlCore(url);
+    } catch (ytdlError) {
+      console.warn('⚠️  ytdl-core failed, trying yt-dlp fallback:', ytdlError.message);
+      
+      // Fallback to yt-dlp
+      try {
+        const result = await ytdlpExtractor.extractFromYouTube(url);
+        return {
+          buffer: result.buffer,
+          platform: 'YouTube',
+          videoId: ytdlpExtractor.extractYouTubeId(url),
+          metadata: result.metadata
+        };
+      } catch (ytdlpError) {
+        console.error('❌ Both ytdl-core and yt-dlp failed');
+        throw new Error(`Failed to extract audio from YouTube: ${ytdlpError.message}`);
+      }
+    }
+  }
+
+  /**
+   * Extract audio using ytdl-core
+   * @param {string} url
+   * @returns {Promise<Object>}
+   */
+  async extractWithYtdlCore(url) {
+    try {
       // Validate URL
       if (!ytdl.validateURL(url)) {
         throw new Error('Invalid YouTube URL');
@@ -71,10 +100,19 @@ class AudioExtractor {
         throw new Error('Could not extract video ID from URL');
       }
 
-      console.log(`📹 Extracting audio from YouTube video: ${videoId}`);
+      console.log(`📹 Extracting audio from YouTube video (ytdl-core): ${videoId}`);
 
-      // Get video info
-      const info = await ytdl.getInfo(url);
+      // Get video info with options to bypass restrictions
+      const ytdlOptions = {
+        requestOptions: {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9'
+          }
+        }
+      };
+
+      const info = await ytdl.getInfo(url, ytdlOptions);
       const metadata = {
         title: info.videoDetails.title,
         author: info.videoDetails.author.name,
@@ -90,10 +128,16 @@ class AudioExtractor {
       const tempDir = os.tmpdir();
       const tempAudioPath = path.join(tempDir, `${videoId}_audio.mp3`);
 
-      // Download audio stream
+      // Download audio stream with options
       const audioStream = ytdl(url, {
         quality: 'highestaudio',
-        filter: 'audioonly'
+        filter: 'audioonly',
+        requestOptions: {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9'
+          }
+        }
       });
 
       // Convert to MP3 and extract 30-second sample

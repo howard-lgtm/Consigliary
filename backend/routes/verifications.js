@@ -70,7 +70,7 @@ router.post('/', async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')
              RETURNING *`,
             [
-                req.user.userId,
+                req.user.id,
                 trackId || null,
                 metadata.platform,
                 metadata.videoUrl,
@@ -92,9 +92,11 @@ router.post('/', async (req, res) => {
             audioData = await audioExtractor.extractAudio(videoUrl);
             console.log(`✅ Audio extracted: ${audioData.buffer.length} bytes`);
 
-            // Step 2: Upload audio sample to S3
-            audioSampleUrl = await s3Service.uploadAudioSample(audioData.buffer, verification.id);
-            console.log(`✅ Audio sample uploaded to S3: ${audioSampleUrl}`);
+            // Step 2: Upload audio sample to S3 (TEMPORARILY DISABLED - S3 permissions issue)
+            // audioSampleUrl = await s3Service.uploadAudioSample(audioData.buffer, verification.id);
+            // console.log(`✅ Audio sample uploaded to S3: ${audioSampleUrl}`);
+            audioSampleUrl = null; // Skip S3 for now
+            console.log(`⚠️  S3 upload skipped (permissions issue - fix later)`);
 
             // Step 3: Identify audio with ACRCloud
             matchResult = await acrcloudService.identifyAudio(audioData.buffer);
@@ -117,7 +119,7 @@ router.post('/', async (req, res) => {
             const updateResult = await pool.query(updateQuery, [
                 audioSampleUrl,
                 matchResult.found,
-                matchResult.confidence || null,
+                matchResult.confidence ? (matchResult.confidence / 100) : null, // Convert 0-100 to 0-1
                 matchResult.trackTitle || null,
                 matchResult.artist || null,
                 audioData.metadata.viewCount || null,
