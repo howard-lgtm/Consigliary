@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
                 });
             }
 
-            if (trackCheck.rows[0].user_id !== req.user.userId) {
+            if (trackCheck.rows[0].user_id !== req.user.id) {
                 return res.status(403).json({
                     success: false,
                     message: 'Not authorized to verify against this track'
