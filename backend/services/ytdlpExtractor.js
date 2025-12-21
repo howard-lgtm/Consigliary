@@ -24,13 +24,8 @@ class YtDlpExtractor {
 
       // Build yt-dlp command with platform-specific options
       let baseOptions = '';
-      if (platform === 'TikTok') {
-        // Use browser impersonation for TikTok to bypass bot detection
-        baseOptions = '--impersonate chrome';
-      } else if (platform === 'Instagram') {
-        // Instagram also benefits from impersonation
-        baseOptions = '--impersonate chrome';
-      }
+      // Note: --impersonate requires curl-cffi which is not available in our environment
+      // TikTok and Instagram work fine without impersonation
 
       // Get video info first
       const infoCommand = `yt-dlp ${baseOptions} --dump-json "${url}"`;
