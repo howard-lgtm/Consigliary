@@ -5,6 +5,7 @@ const { authenticateToken } = require('../middleware/auth');
 const licensePDF = require('../services/licensePDF');
 const s3Service = require('../services/s3');
 const stripeService = require('../services/stripe');
+const emailService = require('../services/email');
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -23,7 +24,8 @@ router.post('/', async (req, res) => {
             currency = 'USD',
             territory = 'Worldwide',
             duration = 'Perpetual',
-            exclusivity = 'non-exclusive'
+            exclusivity = 'non-exclusive',
+            sendEmail = true
         } = req.body;
 
         // Validation
@@ -153,15 +155,50 @@ router.post('/', async (req, res) => {
             ]
         );
 
+        // Send email if requested
+        let emailSent = false;
+        if (sendEmail) {
+            try {
+                console.log('📧 Sending license invoice email...');
+                await emailService.sendLicenseInvoice({
+                    to: licenseeEmail,
+                    licensorName: user.artist_name || user.name,
+                    licensorEmail: user.email,
+                    trackTitle: track.title,
+                    trackArtist: track.artist_name,
+                    licenseFee: parseFloat(licenseFee),
+                    currency,
+                    pdfUrl: s3Result.url,
+                    stripeInvoiceUrl: stripeInvoice?.invoiceUrl,
+                    licenseId
+                });
+                
+                // Update license status to 'sent'
+                await query(
+                    `UPDATE licenses SET status = 'sent', sent_at = CURRENT_TIMESTAMP WHERE id = $1`,
+                    [licenseId]
+                );
+                
+                emailSent = true;
+                console.log('✅ License invoice email sent successfully');
+            } catch (emailError) {
+                console.error('⚠️  Email sending failed:', emailError.message);
+                // Continue even if email fails - license is still created
+            }
+        }
+
         res.status(201).json({
             success: true,
             data: {
                 license: result.rows[0],
                 pdfUrl: s3Result.url,
                 stripeInvoiceUrl: stripeInvoice?.invoiceUrl || null,
-                stripeInvoiceId: stripeInvoice?.invoiceId || null
+                stripeInvoiceId: stripeInvoice?.invoiceId || null,
+                emailSent
             },
-            message: 'License generated successfully'
+            message: emailSent 
+                ? 'License generated and email sent successfully' 
+                : 'License generated successfully'
         });
     } catch (error) {
         console.error('License generation error:', error);

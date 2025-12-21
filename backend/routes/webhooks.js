@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
 const stripeService = require('../services/stripe');
+const emailService = require('../services/email');
 
 // Stripe webhook - NO authentication middleware (Stripe validates with signature)
 router.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -105,6 +106,38 @@ async function handleInvoicePaid(invoice) {
                  WHERE id = $2`,
                 [license.license_fee, license.track_id]
             );
+
+            // Get user and track details for confirmation email
+            const userResult = await query(
+                'SELECT name, email, artist_name FROM users WHERE id = $1',
+                [license.user_id]
+            );
+            
+            const trackResult = await query(
+                'SELECT title FROM tracks WHERE id = $1',
+                [license.track_id]
+            );
+
+            if (userResult.rows.length > 0 && trackResult.rows.length > 0) {
+                const user = userResult.rows[0];
+                const track = trackResult.rows[0];
+
+                // Send payment confirmation email to licensee
+                try {
+                    await emailService.sendPaymentConfirmation({
+                        to: license.licensee_email,
+                        licensorName: user.artist_name || user.name,
+                        licensorEmail: user.email,
+                        trackTitle: track.title,
+                        amount: parseFloat(license.license_fee),
+                        currency: license.currency,
+                        pdfUrl: license.pdf_url
+                    });
+                    console.log('✅ Payment confirmation email sent');
+                } catch (emailError) {
+                    console.error('⚠️  Failed to send confirmation email:', emailError.message);
+                }
+            }
 
             console.log('✅ License payment processed successfully');
         }
