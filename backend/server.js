@@ -15,6 +15,11 @@ app.use(cors({
     ],
     credentials: true
 }));
+
+// Webhooks need raw body - must be before express.json()
+const webhookRoutes = require('./routes/webhooks');
+app.use('/webhooks', webhookRoutes);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -4,6 +4,7 @@ const { query } = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const licensePDF = require('../services/licensePDF');
 const s3Service = require('../services/s3');
+const stripeService = require('../services/stripe');
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -114,20 +115,41 @@ router.post('/', async (req, res) => {
             `license_${licenseId}.pdf`
         );
 
+        // Create Stripe invoice
+        let stripeInvoice = null;
+        try {
+            console.log('💳 Creating Stripe invoice...');
+            stripeInvoice = await stripeService.createInvoice({
+                licenseId,
+                userId: req.user.id,
+                trackId,
+                trackTitle: track.title,
+                trackArtist: track.artist_name,
+                licenseeName,
+                licenseeEmail,
+                licenseFee: parseFloat(licenseFee),
+                currency
+            });
+            console.log('✅ Stripe invoice created:', stripeInvoice.invoiceId);
+        } catch (stripeError) {
+            console.error('⚠️  Stripe invoice creation failed:', stripeError.message);
+            // Continue without Stripe - license can still be generated
+        }
+
         // Create license record
         const result = await query(
             `INSERT INTO licenses (
                 id, user_id, track_id, verification_id,
                 licensee_name, licensee_email, licensee_platform, licensee_channel_url,
                 license_fee, currency, territory, duration, exclusivity,
-                pdf_url, status
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                pdf_url, status, stripe_invoice_id
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             RETURNING *`,
             [
                 licenseId, req.user.id, trackId, verificationId,
                 licenseeName, licenseeEmail, licenseePlatform, licenseeChannelUrl,
                 licenseFee, currency, territory, duration, exclusivity,
-                s3Result.url, 'draft'
+                s3Result.url, 'draft', stripeInvoice?.invoiceId || null
             ]
         );
 
@@ -135,7 +157,9 @@ router.post('/', async (req, res) => {
             success: true,
             data: {
                 license: result.rows[0],
-                pdfUrl: s3Result.url
+                pdfUrl: s3Result.url,
+                stripeInvoiceUrl: stripeInvoice?.invoiceUrl || null,
+                stripeInvoiceId: stripeInvoice?.invoiceId || null
             },
             message: 'License generated successfully'
         });
