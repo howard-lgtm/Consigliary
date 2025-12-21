@@ -92,11 +92,15 @@ router.post('/', async (req, res) => {
             audioData = await audioExtractor.extractAudio(videoUrl);
             console.log(`✅ Audio extracted: ${audioData.buffer.length} bytes`);
 
-            // Step 2: Upload audio sample to S3 (TEMPORARILY DISABLED - S3 permissions issue)
-            // audioSampleUrl = await s3Service.uploadAudioSample(audioData.buffer, verification.id);
-            // console.log(`✅ Audio sample uploaded to S3: ${audioSampleUrl}`);
-            audioSampleUrl = null; // Skip S3 for now
-            console.log(`⚠️  S3 upload skipped (permissions issue - fix later)`);
+            // Step 2: Upload audio sample to S3
+            try {
+                const s3Result = await s3Service.uploadAudioSample(audioData.buffer, verification.id);
+                audioSampleUrl = s3Result.url;
+                console.log(`✅ Audio sample uploaded to S3: ${audioSampleUrl}`);
+            } catch (s3Error) {
+                console.warn(`⚠️  S3 upload failed: ${s3Error.message}`);
+                audioSampleUrl = null; // Continue without S3 URL
+            }
 
             // Step 3: Identify audio with ACRCloud
             matchResult = await acrcloudService.identifyAudio(audioData.buffer);
@@ -149,9 +153,28 @@ router.post('/', async (req, res) => {
                 ['error', verification.id]
             );
 
-            return res.status(500).json({
+            // Provide user-friendly error messages
+            let userMessage = 'Audio extraction failed';
+            let statusCode = 500;
+
+            if (extractionError.message.includes('Invalid YouTube URL')) {
+                userMessage = 'The YouTube URL provided is invalid or the video is unavailable';
+                statusCode = 400;
+            } else if (extractionError.message.includes('private') || extractionError.message.includes('unavailable')) {
+                userMessage = 'This video is private or unavailable. Please use a public video.';
+                statusCode = 403;
+            } else if (extractionError.message.includes('not yet implemented')) {
+                userMessage = 'This platform is not yet supported. Currently supporting YouTube, TikTok, and Instagram.';
+                statusCode = 501;
+            } else if (extractionError.message.includes('TikTok') || extractionError.message.includes('Instagram')) {
+                userMessage = `Failed to extract audio from ${metadata.platform}. The video may be private or unavailable.`;
+                statusCode = 400;
+            }
+
+            return res.status(statusCode).json({
                 success: false,
-                message: `Audio extraction failed: ${extractionError.message}`,
+                message: userMessage,
+                error: extractionError.message,
                 data: verification
             });
         }

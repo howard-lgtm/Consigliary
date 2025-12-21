@@ -19,9 +19,9 @@ class AudioExtractor {
       case 'YouTube':
         return await this.extractFromYouTube(url);
       case 'TikTok':
-        throw new Error('TikTok extraction not yet implemented');
+        return await this.extractFromTikTok(url);
       case 'Instagram':
-        throw new Error('Instagram extraction not yet implemented');
+        return await this.extractFromInstagram(url);
       default:
         throw new Error(`Unsupported platform: ${platform}`);
     }
@@ -183,25 +183,51 @@ class AudioExtractor {
   }
 
   /**
-   * Extract audio from TikTok video (placeholder)
+   * Extract audio from TikTok video using yt-dlp
    * @param {string} url
    * @returns {Promise<Object>}
    */
   async extractFromTikTok(url) {
-    // TODO: Implement TikTok extraction
-    // May require different library or API
-    throw new Error('TikTok extraction not yet implemented');
+    try {
+      console.log(`📹 Extracting audio from TikTok: ${url}`);
+      
+      const result = await ytdlpExtractor.extractFromTikTok(url);
+      const videoId = ytdlpExtractor.extractVideoId(url, 'TikTok');
+      
+      return {
+        buffer: result.buffer,
+        platform: 'TikTok',
+        videoId: videoId,
+        metadata: result.metadata
+      };
+    } catch (error) {
+      console.error('❌ TikTok extraction error:', error);
+      throw new Error(`Failed to extract audio from TikTok: ${error.message}`);
+    }
   }
 
   /**
-   * Extract audio from Instagram video (placeholder)
+   * Extract audio from Instagram video using yt-dlp
    * @param {string} url
    * @returns {Promise<Object>}
    */
   async extractFromInstagram(url) {
-    // TODO: Implement Instagram extraction
-    // May require different library or API
-    throw new Error('Instagram extraction not yet implemented');
+    try {
+      console.log(`📹 Extracting audio from Instagram: ${url}`);
+      
+      const result = await ytdlpExtractor.extractFromInstagram(url);
+      const videoId = ytdlpExtractor.extractVideoId(url, 'Instagram');
+      
+      return {
+        buffer: result.buffer,
+        platform: 'Instagram',
+        videoId: videoId,
+        metadata: result.metadata
+      };
+    } catch (error) {
+      console.error('❌ Instagram extraction error:', error);
+      throw new Error(`Failed to extract audio from Instagram: ${error.message}`);
+    }
   }
 }
 
