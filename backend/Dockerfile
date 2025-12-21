@@ -5,14 +5,19 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     python3 \
     python3-pip \
+    python3-venv \
     python3-dev \
     build-essential \
     libssl-dev \
     libffi-dev \
     curl \
     && rm -rf /var/lib/apt/lists/* \
-    && pip3 install --no-cache-dir --upgrade pip \
-    && pip3 install --no-cache-dir curl-cffi[all] yt-dlp --break-system-packages
+    && python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir --upgrade pip \
+    && /opt/venv/bin/pip install --no-cache-dir curl-cffi yt-dlp
+
+# Add venv to PATH
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Set working directory
 WORKDIR /app
