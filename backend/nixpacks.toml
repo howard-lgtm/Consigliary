@@ -2,10 +2,10 @@
 nixPkgs = ["ffmpeg", "python3", "python3Packages.pip"]
 
 [phases.install]
-cmds = ["pip install yt-dlp", "npm ci"]
+cmds = ["pip3 install yt-dlp", "npm ci"]
 
 [phases.build]
 cmds = []
 
 [start]
-cmd = "npm start"
+cmd = "export PATH=$PATH:/root/.local/bin && npm start"
