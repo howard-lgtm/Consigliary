@@ -1,10 +1,14 @@
-const AWS = require('aws-sdk');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
-// Configure AWS S3
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION || 'eu-north-1'
+// Configure AWS S3 Client
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION || 'eu-north-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
 });
 
 const BUCKET_NAME = process.env.AWS_S3_BUCKET || 'consigliary-audio-files';
@@ -30,11 +34,18 @@ async function uploadAudioFile(fileBuffer, userId, trackId, fileName) {
   };
 
   try {
-    const result = await s3.upload(params).promise();
+    const upload = new Upload({
+      client: s3Client,
+      params: params
+    });
+
+    const result = await upload.done();
+    const url = `https://${params.Bucket}.s3.${process.env.AWS_REGION || 'eu-north-1'}.amazonaws.com/${params.Key}`;
+    
     return {
-      url: result.Location,
-      key: result.Key,
-      bucket: result.Bucket
+      url: url,
+      key: params.Key,
+      bucket: params.Bucket
     };
   } catch (error) {
     console.error('S3 upload error:', error);
@@ -54,8 +65,15 @@ async function getAudioFile(key) {
   };
 
   try {
-    const result = await s3.getObject(params).promise();
-    return result.Body;
+    const command = new GetObjectCommand(params);
+    const result = await s3Client.send(command);
+    
+    // Convert stream to buffer
+    const chunks = [];
+    for await (const chunk of result.Body) {
+      chunks.push(chunk);
+    }
+    return Buffer.concat(chunks);
   } catch (error) {
     console.error('S3 download error:', error);
     throw new Error(`Failed to download file from S3: ${error.message}`);
@@ -74,7 +92,8 @@ async function deleteAudioFile(key) {
   };
 
   try {
-    await s3.deleteObject(params).promise();
+    const command = new DeleteObjectCommand(params);
+    await s3Client.send(command);
   } catch (error) {
     console.error('S3 delete error:', error);
     throw new Error(`Failed to delete file from S3: ${error.message}`);
@@ -87,15 +106,15 @@ async function deleteAudioFile(key) {
  * @param {number} expiresIn - Expiration time in seconds (default: 1 hour)
  * @returns {Promise<string>}
  */
-async function getSignedUrl(key, expiresIn = 3600) {
+async function getPresignedUrl(key, expiresIn = 3600) {
   const params = {
     Bucket: BUCKET_NAME,
-    Key: key,
-    Expires: expiresIn
+    Key: key
   };
 
   try {
-    return await s3.getSignedUrlPromise('getObject', params);
+    const command = new GetObjectCommand(params);
+    return await getSignedUrl(s3Client, command, { expiresIn });
   } catch (error) {
     console.error('S3 signed URL error:', error);
     throw new Error(`Failed to generate signed URL: ${error.message}`);
@@ -120,10 +139,17 @@ async function uploadAudioSample(audioBuffer, verificationId) {
   };
 
   try {
-    const result = await s3.upload(params).promise();
+    const upload = new Upload({
+      client: s3Client,
+      params: params
+    });
+
+    await upload.done();
+    const url = `https://${params.Bucket}.s3.${process.env.AWS_REGION || 'eu-north-1'}.amazonaws.com/${params.Key}`;
+    
     return {
-      url: result.Location,
-      key: result.Key
+      url: url,
+      key: params.Key
     };
   } catch (error) {
     console.error('S3 sample upload error:', error);
@@ -155,7 +181,8 @@ function getContentType(extension) {
  */
 async function testConnection() {
   try {
-    await s3.headBucket({ Bucket: BUCKET_NAME }).promise();
+    const command = new HeadBucketCommand({ Bucket: BUCKET_NAME });
+    await s3Client.send(command);
     console.log(`✅ S3 connection successful: ${BUCKET_NAME}`);
     return true;
   } catch (error) {
@@ -168,7 +195,7 @@ module.exports = {
   uploadAudioFile,
   getAudioFile,
   deleteAudioFile,
-  getSignedUrl,
+  getSignedUrl: getPresignedUrl,
   uploadAudioSample,
   testConnection
 };
