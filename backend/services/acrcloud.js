@@ -16,6 +16,13 @@ class ACRCloudService {
      */
     async generateFingerprint(audioBuffer) {
         try {
+            console.log('🔑 ACRCloud config:', {
+                host: this.host,
+                accessKey: this.accessKey ? `${this.accessKey.substring(0, 8)}...` : 'MISSING',
+                accessSecret: this.accessSecret ? `${this.accessSecret.substring(0, 8)}...` : 'MISSING',
+                endpoint: this.endpoint
+            });
+
             const timestamp = new Date().getTime();
             const stringToSign = `POST\n${this.endpoint}\n${this.accessKey}\naudio\n1\n${timestamp}`;
             const signature = crypto
@@ -44,9 +51,10 @@ class ACRCloudService {
                 }
             );
 
+            console.log('✅ ACRCloud response status:', response.data.status);
             return response.data;
         } catch (error) {
-            console.error('ACRCloud fingerprint error:', error);
+            console.error('ACRCloud fingerprint error:', error.response?.data || error.message);
             throw new Error('Failed to generate audio fingerprint');
         }
     }
