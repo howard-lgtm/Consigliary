@@ -22,8 +22,18 @@ class YtDlpExtractor {
     try {
       console.log(`📹 Extracting audio with yt-dlp from ${platform}: ${videoId}`);
 
+      // Build yt-dlp command with platform-specific options
+      let baseOptions = '';
+      if (platform === 'TikTok') {
+        // Use browser impersonation for TikTok to bypass bot detection
+        baseOptions = '--impersonate chrome';
+      } else if (platform === 'Instagram') {
+        // Instagram also benefits from impersonation
+        baseOptions = '--impersonate chrome';
+      }
+
       // Get video info first
-      const infoCommand = `yt-dlp --dump-json "${url}"`;
+      const infoCommand = `yt-dlp ${baseOptions} --dump-json "${url}"`;
       const { stdout: infoJson } = await execAsync(infoCommand);
       const info = JSON.parse(infoJson);
 
@@ -40,7 +50,7 @@ class YtDlpExtractor {
       console.log(`📊 Video metadata: ${metadata.title} by ${metadata.author}`);
 
       // Download and extract audio (30 seconds)
-      const downloadCommand = `yt-dlp -x --audio-format mp3 --audio-quality 128K --postprocessor-args "ffmpeg:-t 30" -o "${tempAudioPath}" "${url}"`;
+      const downloadCommand = `yt-dlp ${baseOptions} -x --audio-format mp3 --audio-quality 128K --postprocessor-args "ffmpeg:-t 30" -o "${tempAudioPath}" "${url}"`;
       
       console.log('⬇️  Downloading audio...');
       await execAsync(downloadCommand, { maxBuffer: 50 * 1024 * 1024 }); // 50MB buffer
