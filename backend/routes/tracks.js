@@ -5,6 +5,7 @@ const { query } = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const s3Service = require('../services/s3');
 const acrcloudService = require('../services/acrcloud');
+const tiktokService = require('../services/tiktok');
 
 // Configure multer for file uploads (memory storage)
 const upload = multer({
@@ -359,6 +360,91 @@ router.post('/:id/upload-audio', upload.single('audio'), async (req, res) => {
             error: {
                 code: 'INTERNAL_ERROR',
                 message: error.message || 'Failed to upload audio file'
+            }
+        });
+    }
+});
+
+// POST /api/v1/tracks/download-tiktok - Download audio from TikTok URL and create track
+router.post('/download-tiktok', async (req, res) => {
+    try {
+        const { url, title, artistName } = req.body;
+
+        // Validation
+        if (!url) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'VALIDATION_ERROR',
+                    message: 'TikTok URL is required'
+                }
+            });
+        }
+
+        // Step 1: Download audio from TikTok
+        console.log(`Downloading TikTok audio from: ${url}`);
+        const downloadResult = await tiktokService.downloadTikTokAudio(url);
+
+        // Step 2: Upload to S3
+        console.log(`Uploading TikTok audio to S3...`);
+        const trackId = require('crypto').randomUUID();
+        const s3Result = await s3Service.uploadAudioFile(
+            downloadResult.buffer,
+            req.user.id,
+            trackId,
+            downloadResult.filename
+        );
+
+        // Step 3: Generate ACRCloud fingerprint
+        console.log(`Generating ACRCloud fingerprint...`);
+        let fingerprintResult;
+        try {
+            fingerprintResult = await acrcloudService.generateFingerprint(downloadResult.buffer);
+        } catch (acrError) {
+            console.error('ACRCloud fingerprint error:', acrError);
+            fingerprintResult = null;
+        }
+
+        // Step 4: Create track in database
+        const trackTitle = title || downloadResult.metadata.title || 'TikTok Audio';
+        const trackArtist = artistName || downloadResult.metadata.author || 'Unknown Artist';
+        const acrcloudFingerprintId = fingerprintResult?.metadata?.music?.[0]?.acrid || null;
+
+        const result = await query(
+            `INSERT INTO tracks (
+                id, user_id, title, artist_name, duration, audio_file_url,
+                acrcloud_fingerprint_id, master_file_location
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *`,
+            [
+                trackId,
+                req.user.id,
+                trackTitle,
+                trackArtist,
+                downloadResult.metadata.duration,
+                s3Result.url,
+                acrcloudFingerprintId,
+                downloadResult.metadata.url
+            ]
+        );
+
+        res.status(201).json({
+            success: true,
+            data: {
+                track: result.rows[0],
+                audioUrl: s3Result.url,
+                fingerprintId: acrcloudFingerprintId,
+                metadata: downloadResult.metadata
+            },
+            message: 'TikTok audio downloaded and track created successfully'
+        });
+    } catch (error) {
+        console.error('TikTok download error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'TIKTOK_DOWNLOAD_ERROR',
+                message: error.message || 'Failed to download TikTok audio'
             }
         });
     }
