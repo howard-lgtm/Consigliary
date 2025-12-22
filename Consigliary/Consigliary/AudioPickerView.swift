@@ -37,14 +37,17 @@ struct AudioPickerView: UIViewControllerRepresentable {
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             guard let url = urls.first else { return }
             
-            // Start accessing security-scoped resource
-            guard url.startAccessingSecurityScopedResource() else {
-                print("❌ Failed to access security-scoped resource")
-                return
+            // Use centralized iCloud file handler
+            iCloudFileHandler.shared.prepareFile(at: url) { preparedURL in
+                DispatchQueue.main.async {
+                    if let preparedURL = preparedURL {
+                        self.parent.audioURL = preparedURL
+                        print("✅ Audio file ready: \(preparedURL.lastPathComponent)")
+                    } else {
+                        print("❌ Failed to prepare audio file")
+                    }
+                }
             }
-            
-            parent.audioURL = url
-            print("✅ Audio file selected: \(url.lastPathComponent)")
         }
         
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {

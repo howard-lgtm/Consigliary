@@ -233,7 +233,7 @@ struct TrackDetailView: View {
             AddTrackView(editingTrack: track)
         }
         .sheet(isPresented: $showingContributors) {
-            ContributorManagementView(trackId: track.id, trackTitle: track.title)
+            ContributorManagementView(trackId: track.id.uuidString, trackTitle: track.title)
         }
     }
     

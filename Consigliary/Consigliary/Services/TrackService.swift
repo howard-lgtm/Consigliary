@@ -168,9 +168,15 @@ class TrackService: ObservableObject {
     
     @MainActor
     func uploadAudio(trackId: String, audioFileURL: URL) async throws -> AudioUploadResponse {
-        // Ensure we have access to the file
+        print("🔍 Starting audio upload for track \(trackId)")
+        
+        // Start accessing security-scoped resource
+        let didStartAccessing = audioFileURL.startAccessingSecurityScopedResource()
+        
         defer {
-            audioFileURL.stopAccessingSecurityScopedResource()
+            if didStartAccessing {
+                audioFileURL.stopAccessingSecurityScopedResource()
+            }
         }
         
         // Read audio file data

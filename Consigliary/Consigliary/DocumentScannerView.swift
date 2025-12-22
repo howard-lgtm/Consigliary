@@ -109,8 +109,19 @@ struct DocumentPickerView: UIViewControllerRepresentable {
         }
         
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            parent.completion(urls.first)
-            parent.dismiss()
+            guard let url = urls.first else {
+                parent.completion(nil)
+                parent.dismiss()
+                return
+            }
+            
+            // Use centralized iCloud file handler
+            iCloudFileHandler.shared.prepareFile(at: url) { preparedURL in
+                DispatchQueue.main.async {
+                    self.parent.completion(preparedURL)
+                    self.parent.dismiss()
+                }
+            }
         }
         
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {

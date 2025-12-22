@@ -1,17 +1,11 @@
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
 class EmailService {
   constructor() {
-    // Configure SendGrid SMTP transport
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.sendgrid.net',
-      port: 587,
-      secure: false,
-      auth: {
-        user: 'apikey',
-        pass: process.env.SENDGRID_API_KEY
-      }
-    });
+    // Configure SendGrid API
+    if (process.env.SENDGRID_API_KEY) {
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    }
   }
 
   /**
@@ -56,24 +50,24 @@ class EmailService {
         stripeInvoiceUrl
       });
 
-      const mailOptions = {
-        from: `${licensorName} <${process.env.SENDGRID_FROM_EMAIL || licensorEmail}>`,
+      const msg = {
         to: to,
+        from: process.env.SENDGRID_FROM_EMAIL || licensorEmail,
         subject: subject,
         text: textContent,
         html: htmlContent,
-        headers: {
-          'X-License-ID': licenseId
+        customArgs: {
+          licenseId: licenseId
         }
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = await sgMail.send(msg);
       
-      console.log('✅ License invoice email sent:', result.messageId);
+      console.log('✅ License invoice email sent via SendGrid API');
       
       return {
         success: true,
-        messageId: result.messageId,
+        messageId: result[0].headers['x-message-id'],
         to: to
       };
     } catch (error) {
@@ -366,21 +360,21 @@ ${licensorName}
 © ${new Date().getFullYear()} Consigliary
       `.trim();
 
-      const mailOptions = {
-        from: `${licensorName} <${process.env.SENDGRID_FROM_EMAIL || licensorEmail}>`,
+      const msg = {
         to: to,
+        from: process.env.SENDGRID_FROM_EMAIL || licensorEmail,
         subject: subject,
         text: textContent,
         html: htmlContent
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = await sgMail.send(msg);
       
-      console.log('✅ Payment confirmation email sent:', result.messageId);
+      console.log('✅ Payment confirmation email sent via SendGrid API');
       
       return {
         success: true,
-        messageId: result.messageId,
+        messageId: result[0].headers['x-message-id'],
         to: to
       };
     } catch (error) {
@@ -389,20 +383,7 @@ ${licensorName}
     }
   }
 
-  /**
-   * Test email configuration
-   * @returns {Promise<boolean>} Test result
-   */
-  async testConnection() {
-    try {
-      await this.transporter.verify();
-      console.log('✅ Email service connection successful');
-      return true;
-    } catch (error) {
-      console.error('❌ Email service connection failed:', error.message);
-      return false;
-    }
-  }
 }
+
 
 module.exports = new EmailService();

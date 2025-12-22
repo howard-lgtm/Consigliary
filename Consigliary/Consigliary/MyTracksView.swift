@@ -199,6 +199,9 @@ struct MyTracksView: View {
             AddTrackView()
                 .environmentObject(appData)
         }
+        .refreshable {
+            loadTracks()
+        }
         .onAppear {
             loadTracks()
         }

@@ -40,6 +40,7 @@ struct AddTrackView: View {
     @State private var isUploadingAudio = false
     @State private var uploadProgress: Double = 0.0
     @State private var showingAudioPicker = false
+    @State private var audioUploadedSuccessfully = false
     
     let proOptions = ["ASCAP", "BMI", "SESAC", "GMR", "Not Registered"]
     let masterLocationOptions = ["Cloud Storage", "Personal Archive", "Studio Archive", "Distribution Platform"]
@@ -49,7 +50,9 @@ struct AddTrackView: View {
     let territoryOptions = ["Worldwide", "North America", "Europe", "Asia", "Custom"]
     
     var isValid: Bool {
-        !trackTitle.isEmpty && !artistName.isEmpty && !copyrightOwner.isEmpty
+        let valid = !trackTitle.isEmpty && !artistName.isEmpty && !copyrightOwner.isEmpty
+        print("🔍 Form validation: valid=\(valid), title='\(trackTitle)', artist='\(artistName)', owner='\(copyrightOwner)'")
+        return valid
     }
     
     var audioFilePickerButton: some View {
@@ -58,14 +61,33 @@ struct AddTrackView: View {
         }) {
             HStack {
                 let hasFile = selectedAudioURL != nil
-                Image(systemName: hasFile ? "checkmark.circle.fill" : "music.note.list")
-                    .foregroundColor(hasFile ? Color(hex: "32D74B") : Color(hex: "64D2FF"))
-                    .font(.title3)
+                
+                // Icon changes based on upload status
+                if audioUploadedSuccessfully {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundColor(Color(hex: "32D74B"))
+                        .font(.title3)
+                } else if hasFile {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(Color(hex: "32D74B"))
+                        .font(.title3)
+                } else {
+                    Image(systemName: "music.note.list")
+                        .foregroundColor(Color(hex: "64D2FF"))
+                        .font(.title3)
+                }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(hasFile ? "Audio File Selected" : "Choose Audio File")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
+                    if audioUploadedSuccessfully {
+                        Text("Audio Uploaded ✓")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(hex: "32D74B"))
+                    } else {
+                        Text(hasFile ? "Audio File Selected" : "Choose Audio File")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                    }
                     
                     if let audioURL = selectedAudioURL {
                         Text(audioURL.lastPathComponent)
@@ -80,7 +102,7 @@ struct AddTrackView: View {
                 
                 Spacer()
                 
-                if hasFile {
+                if hasFile && !audioUploadedSuccessfully {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.gray)
                         .onTapGesture {
@@ -89,9 +111,14 @@ struct AddTrackView: View {
                 }
             }
             .padding()
-            .background(Color(hex: "1C1C1E"))
+            .background(audioUploadedSuccessfully ? Color(hex: "32D74B").opacity(0.1) : Color(hex: "1C1C1E"))
             .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(audioUploadedSuccessfully ? Color(hex: "32D74B").opacity(0.3) : Color.clear, lineWidth: 1)
+            )
         }
+        .disabled(audioUploadedSuccessfully)
     }
     
     var audioUploadSection: some View {
@@ -110,7 +137,18 @@ struct AddTrackView: View {
             
             audioFilePickerButton
             
-            if selectedAudioURL != nil {
+            if audioUploadedSuccessfully {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(Color(hex: "32D74B"))
+                    Text("Audio uploaded to secure cloud storage and ready for fingerprinting")
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "32D74B"))
+                }
+                .padding()
+                .background(Color(hex: "32D74B").opacity(0.1))
+                .cornerRadius(8)
+            } else if selectedAudioURL != nil {
                 HStack {
                     Image(systemName: "info.circle")
                         .foregroundColor(Color(hex: "64D2FF"))
@@ -449,15 +487,20 @@ struct AddTrackView: View {
                     audioUploadSection
                     
                     // Save Button
-                    Button(action: {
-                        showingSaveAlert = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            dismiss()
-                        }
-                    }) {
+                    Button(action: saveTrack) {
                         HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                            Text(editingTrack == nil ? "Add Track" : "Save Changes")
+                            if isSaving {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                if selectedAudioURL != nil {
+                                    Text("Uploading audio...")
+                                } else {
+                                    Text("Saving...")
+                                }
+                            } else {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text(editingTrack == nil ? "Add Track" : "Save Changes")
+                            }
                         }
                         .font(.headline)
                         .foregroundColor(.black)
@@ -466,7 +509,7 @@ struct AddTrackView: View {
                         .background(isValid ? Color(hex: "32D74B") : Color.gray)
                         .cornerRadius(12)
                     }
-                    .disabled(!isValid)
+                    .disabled(!isValid || isSaving)
                 }
                 .padding()
             }
@@ -479,18 +522,6 @@ struct AddTrackView: View {
                         dismiss()
                     }
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: saveTrack) {
-                        if isSaving {
-                            ProgressView()
-                        } else {
-                            Text("Save")
-                                .fontWeight(.semibold)
-                        }
-                    }
-                    .disabled(!isValid || isSaving)
-                }
             }
             .sheet(isPresented: $showingDocumentPicker) {
                 DocumentPickerView { url in
@@ -499,16 +530,30 @@ struct AddTrackView: View {
                     }
                 }
             }
-            .alert(editingTrack == nil ? "Track Added!" : "Changes Saved!", isPresented: $showingSaveAlert) {
-                Button("OK") {}
-            } message: {
-                Text(selectedAudioURL != nil ? "Your track and audio file have been uploaded successfully!" : "Your track has been added and is now being monitored.")
-            }
             .sheet(isPresented: $showingAudioPicker) {
                 AudioPickerView(audioURL: $selectedAudioURL)
             }
             .onChange(of: selectedAudioURL) { newValue in
                 if let audioURL = newValue {
+                    // Reset upload success state when new file is selected
+                    audioUploadedSuccessfully = false
+                    
+                    // Validate file size (50MB limit)
+                    do {
+                        let fileAttributes = try FileManager.default.attributesOfItem(atPath: audioURL.path)
+                        if let fileSize = fileAttributes[.size] as? Int64 {
+                            let maxSize: Int64 = 50 * 1024 * 1024 // 50MB
+                            if fileSize > maxSize {
+                                let sizeMB = Double(fileSize) / 1024.0 / 1024.0
+                                saveError = "Audio file is too large (\(String(format: "%.1f", sizeMB))MB). Maximum size is 50MB."
+                                selectedAudioURL = nil
+                                return
+                            }
+                        }
+                    } catch {
+                        print("⚠️ Could not check file size: \(error)")
+                    }
+                    
                     extractAndPopulateMetadata(from: audioURL)
                 }
             }
@@ -516,11 +561,18 @@ struct AddTrackView: View {
     }
     
     func saveTrack() {
+        print("🎯 saveTrack() called")
+        print("   Title: '\(trackTitle)'")
+        print("   Artist: '\(artistName)'")
+        print("   Owner: '\(copyrightOwner)'")
+        print("   Audio URL: \(selectedAudioURL?.lastPathComponent ?? "none")")
+        
         isSaving = true
         saveError = nil
         
         Task {
             do {
+                print("📝 Creating track via API...")
                 // Step 1: Create track with metadata
                 let track = try await TrackService.shared.createTrack(
                     title: trackTitle,
@@ -557,18 +609,33 @@ struct AddTrackView: View {
                             print("   Fingerprint ID: \(fpId)")
                         }
                     } catch {
-                        print("⚠️ Audio upload failed (track saved without audio): \(error)")
-                        // Don't fail the whole operation - track is still saved
+                        let errorMsg = "\(error)"
+                        print("⚠️ Audio upload failed (track saved without audio): \(errorMsg)")
+                        // Show detailed error to user
+                        await MainActor.run {
+                            saveError = "Track saved but audio upload failed: \(errorMsg)"
+                            showingSaveAlert = false // Don't show success alert
+                        }
+                        // Don't dismiss - let user see the error
+                        await MainActor.run {
+                            isSaving = false
+                        }
+                        return
                     }
                 }
                 
-                // Step 3: Show success and dismiss
+                // Step 3: Mark upload as successful and dismiss
                 await MainActor.run {
-                    showingSaveAlert = true
+                    if selectedAudioURL != nil {
+                        audioUploadedSuccessfully = true
+                    }
                     isSaving = false
                 }
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                // Brief delay to show success state before dismissing
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                
+                await MainActor.run {
                     dismiss()
                 }
             } catch {
@@ -666,8 +733,11 @@ struct AddTrackView: View {
         
         let url = quickImportURL.lowercased()
         
-        // Validate URL type
-        if url.contains("album") && !url.contains("/track/") {
+        // Check for Apple Music track (has ?i= parameter for track ID)
+        let isAppleMusicTrack = url.contains("music.apple.com") && url.contains("?i=")
+        
+        // Validate URL type (but allow Apple Music tracks with album in path)
+        if url.contains("album") && !url.contains("/track/") && !isAppleMusicTrack {
             showingImportError = true
             importErrorMessage = "This is an album URL. Please paste a link to an individual track instead."
             return
@@ -679,15 +749,16 @@ struct AddTrackView: View {
             return
         }
         
-        if url.contains("artist") && !url.contains("/track/") {
+        if url.contains("artist") && !url.contains("/track/") && !isAppleMusicTrack {
             showingImportError = true
             importErrorMessage = "This is an artist profile URL. Please paste a link to an individual track instead."
             return
         }
         
         // Check if it's a valid track URL
-        let isValidTrack = url.contains("spotify.com/track/") ||
-                          url.contains("music.apple.com") ||
+        let isSpotifyTrack = url.contains("spotify.com/track/") || url.contains("spotify.link/")
+        let isValidTrack = isSpotifyTrack ||
+                          isAppleMusicTrack ||
                           url.contains("soundcloud.com/") && !url.contains("/sets/")
         
         if !isValidTrack {
@@ -708,21 +779,254 @@ struct AddTrackView: View {
             soundcloudLink = quickImportURL
         }
         
-        // Simulate auto-filled metadata (in production, this would fetch from API)
-        trackTitle = "Midnight Dreams"
-        artistName = "Artist Name"
-        duration = "3:45"
-        releaseDate = "2024"
-        isrcCode = "USRC12345678"
-        
-        // Pre-fill with sensible defaults
-        copyrightOwner = artistName
-        copyrightYear = "2024"
-        publisher = "Independent"
+        // Fetch metadata based on platform
+        if isAppleMusicTrack {
+            Task {
+                await fetchAppleMusicMetadata(from: quickImportURL)
+            }
+        } else if isSpotifyTrack {
+            Task {
+                await fetchSpotifyMetadata(from: quickImportURL)
+            }
+        } else {
+            // For other platforms, use placeholder for now
+            trackTitle = "Imported Track"
+            artistName = "Artist Name"
+            duration = "3:45"
+            releaseDate = "2024"
+            
+            copyrightOwner = artistName
+            copyrightYear = "2024"
+            publisher = "Independent"
+        }
         
         // Hide success message after 3 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             showingImportSuccess = false
+        }
+    }
+    
+    func fetchSpotifyMetadata(from urlString: String) async {
+        print("🎵 Fetching Spotify metadata from: \(urlString)")
+        
+        // Extract track ID from Spotify URL or use direct ID if provided
+        var trackId = ""
+        
+        if let trackIdRange = urlString.range(of: "/track/([a-zA-Z0-9]+)", options: .regularExpression) {
+            // Full URL format
+            let trackIdString = String(urlString[trackIdRange])
+            trackId = String(trackIdString.replacingOccurrences(of: "/track/", with: "").split(separator: "?").first ?? "")
+        } else if urlString.range(of: "^[a-zA-Z0-9]+$", options: .regularExpression) != nil {
+            // Just the track ID
+            trackId = urlString
+        } else {
+            print("❌ Could not extract track ID from: \(urlString)")
+            return
+        }
+        
+        print("🔑 Extracted track ID: \(trackId)")
+        
+        // Get Spotify access token first (using Client Credentials flow)
+        print("🔐 Getting Spotify access token...")
+        guard let accessToken = await getSpotifyAccessToken() else {
+            print("❌ Failed to get Spotify access token")
+            return
+        }
+        print("✅ Got access token: \(accessToken.prefix(20))...")
+        
+        // Fetch track metadata from Spotify API
+        let apiURL = "https://api.spotify.com/v1/tracks/\(trackId)"
+        print("🌐 Calling Spotify API: \(apiURL)")
+        guard let url = URL(string: apiURL) else { return }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📡 Spotify API response: \(httpResponse.statusCode)")
+            }
+            
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📦 Response data: \(responseString.prefix(200))...")
+            }
+            
+            struct SpotifyTrack: Codable {
+                let name: String
+                let artists: [SpotifyArtist]
+                let durationMs: Int
+                let album: SpotifyAlbum
+                let externalIds: SpotifyExternalIds?
+                
+                struct SpotifyArtist: Codable {
+                    let name: String
+                }
+                
+                struct SpotifyAlbum: Codable {
+                    let releaseDate: String
+                    let name: String
+                    
+                    enum CodingKeys: String, CodingKey {
+                        case name
+                        case releaseDate = "release_date"
+                    }
+                }
+                
+                struct SpotifyExternalIds: Codable {
+                    let isrc: String?
+                }
+                
+                enum CodingKeys: String, CodingKey {
+                    case name, artists, album
+                    case durationMs = "duration_ms"
+                    case externalIds = "external_ids"
+                }
+            }
+            
+            let decoder = JSONDecoder()
+            let track = try decoder.decode(SpotifyTrack.self, from: data)
+            
+            await MainActor.run {
+                // Update UI with real metadata
+                trackTitle = track.name
+                artistName = track.artists.map { $0.name }.joined(separator: ", ")
+                
+                // Convert milliseconds to MM:SS format
+                let seconds = track.durationMs / 1000
+                let mins = seconds / 60
+                let secs = seconds % 60
+                duration = String(format: "%d:%02d", mins, secs)
+                
+                // Extract year from release date
+                releaseDate = String(track.album.releaseDate.prefix(4))
+                copyrightYear = String(track.album.releaseDate.prefix(4))
+                
+                // Set ISRC if available
+                if let isrc = track.externalIds?.isrc {
+                    isrcCode = isrc
+                }
+                
+                copyrightOwner = artistName
+                publisher = "Spotify"
+                
+                print("✅ Fetched Spotify metadata: \(trackTitle) by \(artistName)")
+            }
+        } catch {
+            print("❌ Failed to fetch Spotify metadata: \(error)")
+        }
+    }
+    
+    func getSpotifyAccessToken() async -> String? {
+        // Spotify API credentials
+        let clientId = "b80e380a5278421dbea39468aaadf443"
+        let clientSecret = "c5c3fe98402c45f69081f5c7f732c7b5"
+        
+        let credentials = "\(clientId):\(clientSecret)"
+        guard let credentialsData = credentials.data(using: .utf8) else { return nil }
+        let base64Credentials = credentialsData.base64EncodedString()
+        
+        let tokenURL = "https://accounts.spotify.com/api/token"
+        guard let url = URL(string: tokenURL) else { return nil }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Basic \(base64Credentials)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = "grant_type=client_credentials".data(using: .utf8)
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            
+            struct TokenResponse: Codable {
+                let accessToken: String
+                
+                enum CodingKeys: String, CodingKey {
+                    case accessToken = "access_token"
+                }
+            }
+            
+            let response = try JSONDecoder().decode(TokenResponse.self, from: data)
+            return response.accessToken
+        } catch {
+            print("❌ Failed to get Spotify token: \(error)")
+            return nil
+        }
+    }
+    
+    func fetchAppleMusicMetadata(from urlString: String) async {
+        // Extract track ID from Apple Music URL
+        // Format: https://music.apple.com/us/album/song-name/albumId?i=trackId
+        guard let trackIdRange = urlString.range(of: "\\?i=(\\d+)", options: .regularExpression),
+              let trackId = urlString[trackIdRange].split(separator: "=").last else {
+            print("Could not extract track ID from URL")
+            return
+        }
+        
+        // Use iTunes Search API to fetch metadata
+        let apiURL = "https://itunes.apple.com/lookup?id=\(trackId)"
+        
+        guard let url = URL(string: apiURL) else { return }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            
+            struct iTunesResponse: Codable {
+                let results: [iTunesTrack]
+            }
+            
+            struct iTunesTrack: Codable {
+                let trackName: String?
+                let artistName: String?
+                let trackTimeMillis: Int?
+                let releaseDate: String?
+                let isrc: String?
+                let copyright: String?
+            }
+            
+            let response = try JSONDecoder().decode(iTunesResponse.self, from: data)
+            
+            if let track = response.results.first {
+                await MainActor.run {
+                    // Update UI with real metadata
+                    trackTitle = track.trackName ?? "Unknown Track"
+                    artistName = track.artistName ?? "Unknown Artist"
+                    
+                    // Convert milliseconds to MM:SS format
+                    if let millis = track.trackTimeMillis {
+                        let seconds = millis / 1000
+                        let mins = seconds / 60
+                        let secs = seconds % 60
+                        duration = String(format: "%d:%02d", mins, secs)
+                    }
+                    
+                    // Extract year from release date (format: YYYY-MM-DD)
+                    if let release = track.releaseDate {
+                        releaseDate = String(release.prefix(4))
+                        copyrightYear = String(release.prefix(4))
+                    }
+                    
+                    // Set ISRC if available
+                    if let isrc = track.isrc {
+                        isrcCode = isrc
+                    }
+                    
+                    // Set copyright owner
+                    if let copyright = track.copyright {
+                        copyrightOwner = copyright
+                    } else {
+                        copyrightOwner = artistName
+                    }
+                    
+                    publisher = "Apple Music"
+                    
+                    print("✅ Fetched Apple Music metadata: \(trackTitle) by \(artistName)")
+                }
+            }
+        } catch {
+            print("❌ Failed to fetch Apple Music metadata: \(error)")
+            // Keep placeholder values if fetch fails
         }
     }
 }
