@@ -187,11 +187,15 @@ router.post('/', async (req, res) => {
             }
         }
 
+        // Generate pre-signed URL for PDF access (valid for 7 days)
+        const pdfKey = s3Result.key;
+        const signedPdfUrl = await s3Service.getSignedUrl(pdfKey, 604800); // 7 days
+
         res.status(201).json({
             success: true,
             data: {
                 license: result.rows[0],
-                pdfUrl: s3Result.url,
+                pdfUrl: signedPdfUrl,
                 stripeInvoiceUrl: stripeInvoice?.invoiceUrl || null,
                 stripeInvoiceId: stripeInvoice?.invoiceId || null,
                 emailSent
@@ -222,10 +226,27 @@ router.get('/', async (req, res) => {
             [req.user.id]
         );
 
+        // Generate pre-signed URLs for all PDFs
+        const licensesWithSignedUrls = await Promise.all(
+            result.rows.map(async (license) => {
+                if (license.pdf_url) {
+                    try {
+                        const key = license.pdf_url.split('.amazonaws.com/')[1];
+                        const signedUrl = await s3Service.getSignedUrl(key, 604800);
+                        return { ...license, pdf_url: signedUrl };
+                    } catch (error) {
+                        console.error('Failed to generate signed URL:', error);
+                        return license;
+                    }
+                }
+                return license;
+            })
+        );
+
         res.json({
             success: true,
             data: {
-                licenses: result.rows
+                licenses: licensesWithSignedUrls
             }
         });
     } catch (error) {
@@ -258,10 +279,23 @@ router.get('/:id', async (req, res) => {
             });
         }
 
+        const license = result.rows[0];
+        
+        // Generate pre-signed URL for PDF if it exists
+        if (license.pdf_url) {
+            try {
+                const key = license.pdf_url.split('.amazonaws.com/')[1];
+                const signedUrl = await s3Service.getSignedUrl(key, 604800);
+                license.pdf_url = signedUrl;
+            } catch (error) {
+                console.error('Failed to generate signed URL:', error);
+            }
+        }
+
         res.json({
             success: true,
             data: {
-                license: result.rows[0]
+                license
             }
         });
     } catch (error) {
