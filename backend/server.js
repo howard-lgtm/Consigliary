@@ -45,6 +45,7 @@ const contributorRoutes = require('./routes/contributors');
 const verificationRoutes = require('./routes/verifications');
 const licenseRoutes = require('./routes/licenses');
 const revenueRoutes = require('./routes/revenue');
+const adminRoutes = require('./routes/admin');
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/tracks', trackRoutes);
@@ -52,6 +53,7 @@ app.use('/api/v1', contributorRoutes);
 app.use('/api/v1/verifications', verificationRoutes);
 app.use('/api/v1/licenses', licenseRoutes);
 app.use('/api/v1/revenue', revenueRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {
