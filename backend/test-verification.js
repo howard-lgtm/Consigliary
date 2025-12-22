@@ -2,8 +2,8 @@ const axios = require('axios');
 
 const API_BASE = 'https://consigliary-production.up.railway.app/api/v1';
 
-// Test with the TikTok video we just downloaded
-const TEST_VIDEO_URL = 'https://www.tiktok.com/@scout2015/video/6718335390845095173';
+// Test with a YouTube video
+const TEST_VIDEO_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'; // Rick Astley - Never Gonna Give You Up
 
 async function testVerification() {
     try {
@@ -58,13 +58,20 @@ async function testVerification() {
         console.log(JSON.stringify(verifyRes.data, null, 2));
         
         // Check if it matched
-        const verification = verifyRes.data.data.verification;
-        if (verification.is_match) {
-            console.log('\n🎉 SUCCESS! Audio matched correctly!');
-            console.log(`   Confidence: ${verification.confidence_score}%`);
+        const verification = verifyRes.data.data;
+        const matchDetails = verification.matchDetails;
+        
+        if (matchDetails && matchDetails.matched) {
+            console.log('\n🎉 SUCCESS! Audio matched in ACRCloud!');
+            console.log(`   Track: "${matchDetails.title}" by ${matchDetails.artist}`);
+            console.log(`   Confidence: ${matchDetails.confidence}%`);
+            console.log(`   Album: ${matchDetails.album}`);
         } else {
-            console.log('\n⚠️  No match found');
-            console.log(`   Confidence: ${verification.confidence_score}%`);
+            console.log('\n⚠️  No match found in ACRCloud database');
+        }
+        
+        if (verification.track_id) {
+            console.log(`\n📌 Linked to your track: ${testTrack.title}`);
         }
         
     } catch (error) {
