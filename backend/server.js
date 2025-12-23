@@ -41,20 +41,20 @@ app.get('/health', (req, res) => {
 // API Routes
 const authRoutes = require('./routes/auth');
 const trackRoutes = require('./routes/tracks');
-const contributorRoutes = require('./routes/contributors');
+// const contributorRoutes = require('./routes/contributors'); // Deferred to v2.0 - Split Sheet feature
 const verificationRoutes = require('./routes/verifications');
 const licenseRoutes = require('./routes/licenses');
 const revenueRoutes = require('./routes/revenue');
-const monitoringRoutes = require('./routes/monitoring');
+// const monitoringRoutes = require('./routes/monitoring'); // Deferred to v2.0 - Monitoring System feature
 const setupRoutes = require('./routes/setup');
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/tracks', trackRoutes);
-app.use('/api/v1', contributorRoutes);
+// app.use('/api/v1', contributorRoutes); // Deferred to v2.0
 app.use('/api/v1/verifications', verificationRoutes);
 app.use('/api/v1/licenses', licenseRoutes);
 app.use('/api/v1/revenue', revenueRoutes);
-app.use('/api/v1/monitoring', monitoringRoutes);
+// app.use('/api/v1/monitoring', monitoringRoutes); // Deferred to v2.0
 app.use('/api/v1/setup', setupRoutes);
 
 // 404 handler
