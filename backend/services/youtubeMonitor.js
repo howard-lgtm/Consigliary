@@ -66,8 +66,9 @@ class YouTubeMonitorService {
       }));
 
     } catch (error) {
-      console.error('YouTube search error:', error.response?.data || error.message);
-      throw new Error(`YouTube search failed: ${error.message}`);
+      console.error('YouTube search error:', JSON.stringify(error.response?.data, null, 2) || error.message);
+      const errorMsg = error.response?.data?.error?.message || error.message;
+      throw new Error(`YouTube search failed: ${errorMsg}`);
     }
   }
 
