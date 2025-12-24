@@ -10,9 +10,22 @@
 		2C3CF0F52EE0461600551B0B /* Consigliary.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Consigliary.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2CCAD6242EFCAFE400ED04CB /* Exceptions for "Consigliary" folder in "Consigliary" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2C3CF0F42EE0461600551B0B /* Consigliary */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2C3CF0F72EE0461600551B0B /* Consigliary */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2CCAD6242EFCAFE400ED04CB /* Exceptions for "Consigliary" folder in "Consigliary" target */,
+			);
 			path = Consigliary;
 			sourceTree = "<group>";
 		};
@@ -256,6 +269,8 @@
 				DEVELOPMENT_TEAM = A33AU765BV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Consigliary/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Consigliary needs camera access to scan and photograph contracts for analysis.";
@@ -293,6 +308,8 @@
 				DEVELOPMENT_TEAM = A33AU765BV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Consigliary/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Consigliary needs camera access to scan and photograph contracts for analysis.";
