@@ -5,11 +5,11 @@ import Combine
 // MARK: - Main Data Store
 class AppData: ObservableObject {
     // MARK: - Published Properties
-    @Published var tracks: [Track] = Track.mockData
-    @Published var activities: [Activity] = Activity.mockData
-    @Published var deals: [Deal] = Deal.mockData
-    @Published var revenueEvents: [RevenueEvent] = RevenueEvent.mockData
-    @Published var contractAnalyses: [ContractAnalysis] = ContractAnalysis.demoScenarios
+    @Published var tracks: [Track] = [] // Will be loaded from backend
+    @Published var activities: [Activity] = [] // Feature deferred to v2.0
+    @Published var deals: [Deal] = [] // Feature deferred to v2.0
+    @Published var revenueEvents: [RevenueEvent] = [] // Will be loaded from backend
+    @Published var contractAnalyses: [ContractAnalysis] = [] // Feature deferred to v2.0
     @Published var splitSheets: [SplitSheet] = []
     
     // MARK: - Computed Properties

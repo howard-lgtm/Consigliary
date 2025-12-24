@@ -13,23 +13,17 @@ struct DashboardView: View {
                     }
                     .tag(0)
                 
-                ActivityView()
-                    .tabItem {
-                        Label("Activity", systemImage: "bell.fill")
-                    }
-                    .tag(1)
-                
                 MonetizationView()
                     .tabItem {
                         Label("Revenue", systemImage: "dollarsign.circle.fill")
                     }
-                    .tag(2)
+                    .tag(1)
                 
                 AccountView()
                     .tabItem {
                         Label("Account", systemImage: "person.fill")
                     }
-                    .tag(3)
+                    .tag(2)
             }
             .accentColor(Color(hex: "32D74B"))
         }

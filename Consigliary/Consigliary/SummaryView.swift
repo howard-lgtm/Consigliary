@@ -8,33 +8,6 @@ struct SummaryView: View {
         ScrollView {
                 VStack(spacing: 24) {
                     
-                    // Deal Scout
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Deal Scout")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        VStack(spacing: 12) {
-                            ForEach(appData.deals.filter { $0.status == .new || $0.status == .pending }) { deal in
-                                DealCard(
-                                    deal: deal,
-                                    onAccept: { appData.acceptDeal(deal) },
-                                    onDecline: { appData.declineDeal(deal) }
-                                )
-                            }
-                            
-                            if appData.deals.filter({ $0.status == .new || $0.status == .pending }).isEmpty {
-                                Text("No active deals at the moment")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color(hex: "1C1C1E"))
-                                    .cornerRadius(12)
-                            }
-                        }
-                    }
-                    
                     // Quick Actions
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Quick Actions")
@@ -92,14 +65,14 @@ struct SummaryView: View {
                                 icon: "music.note",
                                 title: "Streaming",
                                 value: "$\(Int(appData.streamingRevenue))",
-                                subtitle: "\(Int((appData.streamingRevenue / appData.totalRevenue) * 100))% of total"
+                                subtitle: appData.totalRevenue > 0 ? "\(Int((appData.streamingRevenue / appData.totalRevenue) * 100))% of total" : "No revenue yet"
                             )
                             
                             RevenueCard(
                                 icon: "dollarsign.circle.fill",
                                 title: "Licensing",
                                 value: "$\(Int(appData.syncRevenue))",
-                                subtitle: appData.topTracks.first.map { "Top: \"\($0.title)\"" } ?? ""
+                                subtitle: appData.topTracks.first.map { "Top: \"\($0.title)\"" } ?? "No licenses yet"
                             )
                         }
                     }
