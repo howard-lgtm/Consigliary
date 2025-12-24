@@ -2,65 +2,11 @@ import SwiftUI
 
 struct SummaryView: View {
     @EnvironmentObject var appData: AppData
-    @State private var showingContractAnalyzer = false
-    @State private var showingSplitSheet = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     var body: some View {
         ScrollView {
                 VStack(spacing: 24) {
-                    // 24/7 Monitoring Badge
-                    HStack {
-                        Circle()
-                            .fill(Color(hex: "32D74B"))
-                            .frame(width: 12, height: 12)
-                        Text("24/7 Active Monitoring")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color(hex: "1C1C1E"))
-                    .cornerRadius(12)
-                    
-                    // Autonomous Operations
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Autonomous Operations")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        HStack(spacing: 16) {
-                            MonitoringStatCard(
-                                icon: "shield.checkmark.fill",
-                                title: "Threats Neutralized",
-                                value: "\(appData.threatsNeutralized)",
-                                color: Color(hex: "32D74B")
-                            )
-                            
-                            MonitoringStatCard(
-                                icon: "eye.fill",
-                                title: "Tracks Scanned",
-                                value: appData.tracksScanned,
-                                color: Color(hex: "64D2FF")
-                            )
-                        }
-                        
-                        HStack(spacing: 16) {
-                            MonitoringStatCard(
-                                icon: "clock.fill",
-                                title: "Avg Response",
-                                value: appData.averageResponseTime,
-                                color: Color(hex: "FFD60A")
-                            )
-                            
-                            MonitoringStatCard(
-                                icon: "hand.raised.fill",
-                                title: "Manual Review",
-                                value: "\(appData.manualReviewCount)",
-                                color: Color(hex: "FF9F0A")
-                            )
-                        }
-                    }
                     
                     // Deal Scout
                     VStack(alignment: .leading, spacing: 16) {
@@ -95,24 +41,12 @@ struct SummaryView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        let columns = horizontalSizeClass == .regular ? 
-                            [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())] :
-                            [GridItem(.flexible()), GridItem(.flexible())]
-                        
-                        LazyVGrid(columns: columns, spacing: 12) {
-                            NavigationLink(destination: SplitSheetView()) {
+                        VStack(spacing: 12) {
+                            NavigationLink(destination: MyTracksView()) {
                                 ActionButton(
-                                    icon: "doc.text.fill",
-                                    title: "Split Sheet",
-                                    color: Color(hex: "32D74B")
-                                )
-                            }
-                            
-                            NavigationLink(destination: ContractAnalyzerView()) {
-                                ActionButton(
-                                    icon: "doc.text.magnifyingglass",
-                                    title: "Analyze Contract",
-                                    color: Color(hex: "64D2FF")
+                                    icon: "music.note.list",
+                                    title: "My Tracks",
+                                    color: Color(hex: "BF5AF2")
                                 )
                             }
                             
@@ -121,14 +55,6 @@ struct SummaryView: View {
                                     icon: "doc.badge.gearshape",
                                     title: "License Agreement",
                                     color: Color(hex: "FFD60A")
-                                )
-                            }
-                            
-                            NavigationLink(destination: MyTracksView()) {
-                                ActionButton(
-                                    icon: "music.note.list",
-                                    title: "My Tracks",
-                                    color: Color(hex: "BF5AF2")
                                 )
                             }
                         }

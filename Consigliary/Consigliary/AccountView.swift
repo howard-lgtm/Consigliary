@@ -4,26 +4,39 @@ struct AccountView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appState: AppState
     
+    private var user: UserProfile? {
+        appState.currentUser
+    }
+    
     var body: some View {
         List {
                 Section {
                     HStack(spacing: 16) {
-                        Circle()
-                            .fill(Color(hex: "32D74B"))
-                            .frame(width: 60, height: 60)
-                            .overlay(
-                                Text("JD")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.black)
-                            )
+                        if let profileImageData = user?.profileImageData,
+                           let uiImage = UIImage(data: profileImageData) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 60, height: 60)
+                                .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(Color(hex: "32D74B"))
+                                .frame(width: 60, height: 60)
+                                .overlay(
+                                    Text(user?.initials ?? "?")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.black)
+                                )
+                        }
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Jordan Davis")
+                            Text(user?.name ?? "User")
                                 .font(.title3)
                                 .fontWeight(.semibold)
                             
-                            Text("jordan@example.com")
+                            Text(user?.email ?? "No email")
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                         }
@@ -51,7 +64,7 @@ struct AccountView: View {
                     HStack {
                         Label("Plan", systemImage: "star.fill")
                         Spacer()
-                        Text("Pro")
+                        Text(user?.subscriptionPlan.capitalized ?? "Free")
                             .foregroundColor(.gray)
                     }
                     
@@ -88,7 +101,7 @@ struct AccountView: View {
                 
                 Section {
                     Button(action: {
-                        appState.hasCompletedOnboarding = false
+                        appState.logout()
                     }) {
                         HStack {
                             Label("Sign Out", systemImage: "arrow.right.square.fill")

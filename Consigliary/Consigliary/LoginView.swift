@@ -76,6 +76,18 @@ struct LoginView: View {
                 let user = try await AuthService.shared.login(email: email, password: password)
                 print("✅ Login successful: \(user.name)")
                 await MainActor.run {
+                    // Create UserProfile from login response
+                    let userProfile = UserProfile(
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                        artistName: user.artistName,
+                        subscriptionPlan: user.subscriptionPlan,
+                        artistType: nil,
+                        genre: nil,
+                        profileImageData: nil
+                    )
+                    appState.setUser(userProfile)
                     appState.isAuthenticated = true
                 }
             } catch {

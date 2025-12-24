@@ -1,16 +1,18 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @EnvironmentObject var appData: AppData
+    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
     
-    @State private var name = "Jordan Davis"
-    @State private var email = "jordan@example.com"
+    @State private var name = ""
+    @State private var email = ""
+    @State private var artistName = ""
     @State private var artistType = "Independent Artist"
     @State private var genre = "Electronic"
     @State private var showingSaveAlert = false
     @State private var showingImagePicker = false
     @State private var profileImage: UIImage?
+    @State private var hasChanges = false
     
     let artistTypes = ["Independent Artist", "Signed Artist", "Producer", "Label", "Manager"]
     let genres = ["Electronic", "Hip Hop", "Pop", "Rock", "R&B", "Country", "Jazz", "Classical", "Other"]
@@ -32,7 +34,7 @@ struct ProfileView: View {
                                     .fill(Color(hex: "32D74B"))
                                     .frame(width: 100, height: 100)
                                 
-                                Text("JD")
+                                Text(appState.currentUser?.initials ?? "?")
                                     .font(.system(size: 36, weight: .bold))
                                     .foregroundColor(.black)
                             }
@@ -59,6 +61,18 @@ struct ProfileView: View {
                             
                             TextField("Name", text: $name)
                                 .textFieldStyle(CustomTextFieldStyle())
+                                .onChange(of: name) { _ in hasChanges = true }
+                        }
+                        
+                        // Artist Name
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Artist Name")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                            
+                            TextField("Artist Name", text: $artistName)
+                                .textFieldStyle(CustomTextFieldStyle())
+                                .onChange(of: artistName) { _ in hasChanges = true }
                         }
                         
                         // Email
@@ -71,6 +85,7 @@ struct ProfileView: View {
                                 .textFieldStyle(CustomTextFieldStyle())
                                 .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
+                                .onChange(of: email) { _ in hasChanges = true }
                         }
                         
                         // Artist Type
@@ -83,6 +98,7 @@ struct ProfileView: View {
                                 ForEach(artistTypes, id: \.self) { type in
                                     Button(type) {
                                         artistType = type
+                                        hasChanges = true
                                     }
                                 }
                             } label: {
@@ -110,6 +126,7 @@ struct ProfileView: View {
                                 ForEach(genres, id: \.self) { genreOption in
                                     Button(genreOption) {
                                         genre = genreOption
+                                        hasChanges = true
                                     }
                                 }
                             } label: {
@@ -130,18 +147,17 @@ struct ProfileView: View {
                     
                     // Save Button
                     Button(action: {
-                        let notification = UINotificationFeedbackGenerator()
-                        notification.notificationOccurred(.success)
-                        showingSaveAlert = true
+                        saveProfile()
                     }) {
                         Text("Save Changes")
                             .font(.headline)
-                            .foregroundColor(.black)
+                            .foregroundColor(hasChanges ? .black : .gray)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color(hex: "32D74B"))
+                            .background(hasChanges ? Color(hex: "32D74B") : Color.gray.opacity(0.3))
                             .cornerRadius(12)
                     }
+                    .disabled(!hasChanges)
                     .padding(.top, 20)
                 }
                 .padding()
@@ -166,6 +182,43 @@ struct ProfileView: View {
             .sheet(isPresented: $showingImagePicker) {
                 ImagePicker(image: $profileImage)
             }
+            .onAppear {
+                loadUserData()
+            }
+            .onChange(of: profileImage) { _ in
+                hasChanges = true
+            }
+    }
+    
+    private func loadUserData() {
+        guard let user = appState.currentUser else { return }
+        name = user.name
+        email = user.email
+        artistName = user.artistName
+        artistType = user.artistType ?? "Independent Artist"
+        genre = user.genre ?? "Electronic"
+        
+        if let imageData = user.profileImageData {
+            profileImage = UIImage(data: imageData)
+        }
+    }
+    
+    private func saveProfile() {
+        let notification = UINotificationFeedbackGenerator()
+        notification.notificationOccurred(.success)
+        
+        // Save to AppState (persists to UserDefaults)
+        appState.updateUser(
+            name: name,
+            email: email,
+            artistName: artistName,
+            artistType: artistType,
+            genre: genre,
+            profileImageData: profileImage?.jpegData(compressionQuality: 0.8)
+        )
+        
+        hasChanges = false
+        showingSaveAlert = true
     }
 }
 
