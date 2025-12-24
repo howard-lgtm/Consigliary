@@ -14,22 +14,13 @@ class AppData: ObservableObject {
     
     // MARK: - Computed Properties
     var threatsNeutralized: Int {
-        // Count of activities that have been handled (takedown or licensed)
-        let totalActivities = Activity.mockData.count
-        let remainingActivities = activities.count
-        return totalActivities - remainingActivities
+        // Feature deferred to v2.0 - Activity monitoring
+        return 0
     }
     
     var tracksScanned: String {
-        // Calculate based on total activities processed + current activities
-        let totalScanned = Activity.mockData.count + (threatsNeutralized * 100) // Estimate: each threat represents ~100 scans
-        if totalScanned >= 1_000_000 {
-            return String(format: "%.1fM+", Double(totalScanned) / 1_000_000.0)
-        } else if totalScanned >= 1_000 {
-            return String(format: "%.1fK+", Double(totalScanned) / 1_000.0)
-        } else {
-            return "\(totalScanned)+"
-        }
+        // Feature deferred to v2.0 - Activity monitoring
+        return "0"
     }
     
     var averageResponseTime: String {
@@ -156,18 +147,10 @@ struct Track: Identifiable {
     var streams: Int
     var revenue: Double
     var contributors: [Contributor]
-    
-    static let mockData: [Track] = [
-        Track(title: "Starlight Symphony", streams: 125000, revenue: 450, contributors: []),
-        Track(title: "Midnight Dreams", streams: 98000, revenue: 312, contributors: []),
-        Track(title: "City Lights", streams: 76000, revenue: 285, contributors: []),
-        Track(title: "Summer Vibes", streams: 45000, revenue: 180, contributors: []),
-        Track(title: "Neon Nights", streams: 38000, revenue: 150, contributors: []),
-        Track(title: "Ocean Waves", streams: 29000, revenue: 115, contributors: [])
-    ]
 }
 
 // MARK: - Activity Model
+// Note: Activity monitoring deferred to v2.0
 struct Activity: Identifiable {
     let id = UUID()
     let platform: String
@@ -176,17 +159,10 @@ struct Activity: Identifiable {
     let thumbnail: String
     let timestamp: String
     var requiresManualReview: Bool = false
-    
-    static let mockData: [Activity] = [
-        Activity(platform: "TikTok", track: "Midnight Dreams", artist: "@musiclover23", thumbnail: "🎵", timestamp: "2 min ago", requiresManualReview: true),
-        Activity(platform: "Instagram", track: "Summer Vibes", artist: "@beachparty", thumbnail: "📸", timestamp: "15 min ago"),
-        Activity(platform: "YouTube", track: "City Lights", artist: "VlogDaily", thumbnail: "🎬", timestamp: "1 hour ago", requiresManualReview: true),
-        Activity(platform: "TikTok", track: "Neon Nights", artist: "@danceking", thumbnail: "🎵", timestamp: "3 hours ago", requiresManualReview: true),
-        Activity(platform: "Instagram", track: "Ocean Waves", artist: "@travelblog", thumbnail: "📸", timestamp: "5 hours ago")
-    ]
 }
 
 // MARK: - Deal Model
+// Note: Deal Scout feature deferred to v2.0
 struct Deal: Identifiable {
     let id = UUID()
     let title: String
@@ -195,12 +171,6 @@ struct Deal: Identifiable {
     var status: DealStatus
     var monetaryValue: Double?
     var relatedTrack: String?
-    
-    static let mockData: [Deal] = [
-        Deal(title: "Sync License Opportunity", description: "Netflix series looking for indie tracks", value: "$2,500", status: .new, monetaryValue: 2500, relatedTrack: "Starlight Symphony"),
-        Deal(title: "Brand Partnership", description: "Sustainable fashion brand campaign", value: "$1,200", status: .pending, monetaryValue: 1200, relatedTrack: "Summer Vibes"),
-        Deal(title: "Playlist Placement", description: "Spotify Editorial - Indie Vibes", value: "Exposure", status: .accepted, monetaryValue: nil, relatedTrack: "Midnight Dreams")
-    ]
 }
 
 enum DealStatus {
@@ -218,19 +188,6 @@ struct RevenueEvent: Identifiable {
     let trackTitle: String
     let date: Date
     let description: String
-    
-    static let mockData: [RevenueEvent] = [
-        // Streaming revenue
-        RevenueEvent(source: .streaming, amount: 450, trackTitle: "Starlight Symphony", date: Date(), description: "Spotify, Apple Music, etc."),
-        RevenueEvent(source: .streaming, amount: 312, trackTitle: "Midnight Dreams", date: Date(), description: "Spotify, Apple Music, etc."),
-        RevenueEvent(source: .streaming, amount: 285, trackTitle: "City Lights", date: Date(), description: "Spotify, Apple Music, etc."),
-        
-        // Sync licenses
-        RevenueEvent(source: .syncLicense, amount: 250, trackTitle: "Starlight Symphony", date: Date(), description: "TV commercial license"),
-        
-        // Performance rights
-        RevenueEvent(source: .performanceRights, amount: 150, trackTitle: "Various", date: Date(), description: "BMI/ASCAP royalties")
-    ]
 }
 
 enum RevenueSource {
