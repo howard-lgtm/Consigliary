@@ -12,7 +12,7 @@ Exposed key: `AIzaSyDrAT27istdBYLoYLI-HEVLUydgRKzBctw`
 ### ✅ 1. Created New API Key
 - New key generated in Google Cloud Console
 - Restricted to YouTube Data API v3 only
-- New key: `AIzaSyAyV83p78CvcOBMW9BTWr62jUYSXUOnPPM`
+- New key stored securely in Railway environment variables
 
 ### ✅ 2. Updated Railway
 - `YOUTUBE_API_KEY` environment variable updated
