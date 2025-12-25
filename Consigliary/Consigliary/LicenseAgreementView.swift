@@ -13,7 +13,7 @@ struct LicenseAgreementView: View {
     @State private var duration = "Perpetual"
     @State private var exclusivity = false
     @State private var showingPreview = false
-    @State private var showingShareSheet = false
+    @State private var showingPDFPreview = false
     @State private var pdfURL: URL?
     
     let licenseTypes = ["Sync License", "Master License", "Mechanical License", "Performance License"]
@@ -230,9 +230,9 @@ struct LicenseAgreementView: View {
         }
         .background(Color.black)
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showingShareSheet) {
+        .sheet(isPresented: $showingPDFPreview) {
             if let url = pdfURL {
-                ShareSheet(items: [url])
+                GeneratedLicensePDFView(pdfURL: url)
             }
         }
         .sheet(isPresented: $showingPreview) {
@@ -262,7 +262,7 @@ struct LicenseAgreementView: View {
         
         if let url = LicenseAgreementPDFGenerator.generatePDF(for: licenseData) {
             pdfURL = url
-            showingShareSheet = true
+            showingPDFPreview = true
         }
     }
 }
