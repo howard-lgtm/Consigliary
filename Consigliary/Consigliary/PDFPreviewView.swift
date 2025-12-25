@@ -1,5 +1,5 @@
 import SwiftUI
-import WebKit
+import PDFKit
 
 struct PDFPreviewView: View {
     let pdfURL: URL
@@ -9,8 +9,8 @@ struct PDFPreviewView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // PDF Preview using WebView
-                WebViewPDF(url: pdfURL)
+                // PDF Preview using PDFKit
+                PDFKitView(url: pdfURL)
                 
                 // Action Buttons
                 VStack(spacing: 12) {
@@ -51,19 +51,24 @@ struct PDFPreviewView: View {
     }
 }
 
-struct WebViewPDF: UIViewRepresentable {
+struct PDFKitView: UIViewRepresentable {
     let url: URL
     
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        webView.backgroundColor = .white
-        webView.isOpaque = false
-        return webView
+    func makeUIView(context: Context) -> PDFView {
+        let pdfView = PDFView()
+        pdfView.autoScales = true
+        pdfView.displayMode = .singlePageContinuous
+        pdfView.displayDirection = .vertical
+        pdfView.backgroundColor = .white
+        return pdfView
     }
     
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        let request = URLRequest(url: url)
-        webView.load(request)
-        print("📄 Loading PDF in WebView: \(url.lastPathComponent)")
+    func updateUIView(_ pdfView: PDFView, context: Context) {
+        if let document = PDFDocument(url: url) {
+            pdfView.document = document
+            print("📄 PDF loaded successfully: \(url.lastPathComponent)")
+        } else {
+            print("❌ Failed to load PDF from: \(url.path)")
+        }
     }
 }
