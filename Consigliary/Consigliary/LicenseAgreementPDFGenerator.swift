@@ -173,10 +173,10 @@ class LicenseAgreementPDFGenerator {
             yPosition += 60
             
             // Signature Section
-            yPosition = pageHeight - 200
+            yPosition = pageHeight - 220
             
             "SIGNATURES".draw(at: CGPoint(x: leftMargin, y: yPosition), withAttributes: sectionAttributes)
-            yPosition += 30
+            yPosition += 35
             
             let signatureFont = UIFont.systemFont(ofSize: 10, weight: .regular)
             let signatureAttributes: [NSAttributedString.Key: Any] = [
@@ -184,33 +184,39 @@ class LicenseAgreementPDFGenerator {
                 .foregroundColor: UIColor.darkGray
             ]
             
-            // Artist Signature
+            // Artist Signature Line
             let artistSigPath = UIBezierPath()
             artistSigPath.move(to: CGPoint(x: leftMargin, y: yPosition))
-            artistSigPath.addLine(to: CGPoint(x: leftMargin + (contentWidth * 0.45), y: yPosition))
+            artistSigPath.addLine(to: CGPoint(x: leftMargin + 250, y: yPosition))
             UIColor.black.setStroke()
             artistSigPath.lineWidth = 1
             artistSigPath.stroke()
             
-            yPosition += 15
+            yPosition += 18
             
             "Artist: \(license.artistName)".draw(at: CGPoint(x: leftMargin, y: yPosition), withAttributes: signatureAttributes)
-            "Date: _______________".draw(at: CGPoint(x: leftMargin + (contentWidth * 0.55), y: yPosition), withAttributes: signatureAttributes)
             
-            yPosition += 50
+            // Date field aligned to the right
+            let dateFieldText = "Date: _______________"
+            let dateFieldSize = dateFieldText.size(withAttributes: signatureAttributes)
+            dateFieldText.draw(at: CGPoint(x: rightMargin - dateFieldSize.width, y: yPosition), withAttributes: signatureAttributes)
             
-            // User Signature
+            yPosition += 45
+            
+            // User Signature Line
             let userSigPath = UIBezierPath()
             userSigPath.move(to: CGPoint(x: leftMargin, y: yPosition))
-            userSigPath.addLine(to: CGPoint(x: leftMargin + (contentWidth * 0.45), y: yPosition))
+            userSigPath.addLine(to: CGPoint(x: leftMargin + 250, y: yPosition))
             UIColor.black.setStroke()
             userSigPath.lineWidth = 1
             userSigPath.stroke()
             
-            yPosition += 15
+            yPosition += 18
             
             "User: \(license.userName)".draw(at: CGPoint(x: leftMargin, y: yPosition), withAttributes: signatureAttributes)
-            "Date: _______________".draw(at: CGPoint(x: leftMargin + (contentWidth * 0.55), y: yPosition), withAttributes: signatureAttributes)
+            
+            // Date field aligned to the right
+            dateFieldText.draw(at: CGPoint(x: rightMargin - dateFieldSize.width, y: yPosition), withAttributes: signatureAttributes)
             
             // Footer
             yPosition = pageHeight - 60
