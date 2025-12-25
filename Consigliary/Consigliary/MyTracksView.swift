@@ -208,6 +208,30 @@ struct MyTracksView: View {
     }
     
     func loadTracks() {
+        // Use demo data if enabled
+        if ENABLE_DEMO_DATA {
+            apiTracks = appData.tracks.map { track in
+                TrackService.Track(
+                    id: UUID().uuidString,
+                    title: track.title,
+                    artistName: "Howard Duffy",
+                    duration: "3:45",
+                    releaseDate: ISO8601DateFormatter().string(from: Date()),
+                    isrcCode: "USRC17607839",
+                    spotifyUrl: nil,
+                    appleMusicUrl: nil,
+                    soundcloudUrl: nil,
+                    streams: track.streams,
+                    revenue: String(format: "%.2f", track.revenue),
+                    createdAt: ISO8601DateFormatter().string(from: Date()),
+                    updatedAt: ISO8601DateFormatter().string(from: Date())
+                )
+            }
+            isLoadingTracks = false
+            print("✅ Loaded \(apiTracks.count) demo tracks")
+            return
+        }
+        
         isLoadingTracks = true
         loadError = nil
         
