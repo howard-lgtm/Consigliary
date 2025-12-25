@@ -214,7 +214,7 @@ struct MyTracksView: View {
                 TrackService.Track(
                     id: UUID().uuidString,
                     title: track.title,
-                    artistName: "Howard Duffy",
+                    artistName: "Jordan Davis",
                     duration: "3:45",
                     releaseDate: ISO8601DateFormatter().string(from: Date()),
                     isrcCode: "USRC17607839",
