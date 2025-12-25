@@ -44,7 +44,7 @@ struct ContactUsView: View {
                         ContactOptionCard(
                             icon: "envelope.fill",
                             title: "Email",
-                            subtitle: "howard@htdstudio.net",
+                            subtitle: "info@htdstudio.net",
                             color: Color(hex: "64D2FF")
                         )
                         

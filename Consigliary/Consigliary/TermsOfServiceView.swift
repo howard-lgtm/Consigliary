@@ -164,8 +164,8 @@ struct TermsOfServiceView: View {
                         .foregroundColor(.gray)
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Email: howard@htdstudio.net")
-                        Text("Support: howard@htdstudio.net")
+                        Text("Email: info@htdstudio.net")
+                        Text("Support: info@htdstudio.net")
                         Text("HTDSTUDIO AB")
                         Text("Eskilsgatan 77")
                         Text("Eskilstuna, 633 56")
