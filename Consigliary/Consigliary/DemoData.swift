@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Demo Data for Screenshots
 // IMPORTANT: Set ENABLE_DEMO_DATA to false before archiving for TestFlight
 
-let ENABLE_DEMO_DATA = true // ⚠️ SET TO FALSE BEFORE ARCHIVE
+let ENABLE_DEMO_DATA = false // ⚠️ SET TO FALSE BEFORE ARCHIVE
 
 struct DemoData {
     static let tracks: [Track] = [
