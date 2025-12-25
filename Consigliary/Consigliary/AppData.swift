@@ -12,6 +12,17 @@ class AppData: ObservableObject {
     @Published var contractAnalyses: [ContractAnalysis] = [] // Feature deferred to v2.0
     @Published var splitSheets: [SplitSheet] = []
     
+    // MARK: - Initialization
+    init() {
+        // Load demo data for screenshots if enabled
+        if ENABLE_DEMO_DATA {
+            self.tracks = DemoData.tracks
+            self.activities = DemoData.activities
+            self.deals = DemoData.deals
+            self.revenueEvents = DemoData.revenueEvents
+        }
+    }
+    
     // MARK: - Computed Properties
     var threatsNeutralized: Int {
         // Feature deferred to v2.0 - Activity monitoring
